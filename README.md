@@ -31,4 +31,6 @@ Open-Meteo nie wymaga klucza.
 - `src/store/` - Redux Toolkit (slice'y, thunki, persist w localStorage)
 - `src/components/` - wyspy React (`app`, `weather`, `route`, `maps`, `ui`, `layout`)
 
-Produkcja: `npm run build && npm start`.
+Produkcja: `npm run build && npm start` (adapter Node).
+
+Vercel: adapter `@astrojs/vercel` włącza się automatycznie (zmienna `VERCEL`). Klucze ustaw w Project Settings → Environment Variables.
