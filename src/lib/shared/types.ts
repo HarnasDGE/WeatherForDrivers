@@ -12,6 +12,7 @@ export type ApiErrorCode =
   | 'BAD_REQUEST'
   | 'NOT_FOUND'
   | 'METHOD_NOT_ALLOWED'
+  | 'RATE_LIMITED'
   | 'CONFIG_MISSING_KEY'
   | 'UPSTREAM_ERROR'
   | 'UPSTREAM_TIMEOUT'

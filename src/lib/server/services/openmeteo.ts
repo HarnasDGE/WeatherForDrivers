@@ -81,7 +81,7 @@ export async function getForecast({ lat, lon }: LatLon): Promise<Forecast> {
   url.searchParams.set('timezone', 'auto');
   url.searchParams.set('forecast_days', String(FORECAST_DAYS));
 
-  const res = await fetchJson<OmForecastResponse>(url, { service: SERVICE, retries: 1 });
+  const res = await fetchJson<OmForecastResponse>(url, { service: SERVICE, retries: 1, cacheTtlMs: 10 * 60_000 });
   const hourlyTime = res.hourly?.time ?? [];
   const dailyTime = res.daily?.time ?? [];
 
@@ -134,7 +134,11 @@ export async function getQuarterHourWeather(
   url.searchParams.set('start_date', startDate);
   url.searchParams.set('end_date', endDate);
 
-  const res = await fetchJson<OmForecastResponse | OmForecastResponse[]>(url, { service: SERVICE, retries: 1 });
+  const res = await fetchJson<OmForecastResponse | OmForecastResponse[]>(url, {
+    service: SERVICE,
+    retries: 1,
+    cacheTtlMs: 10 * 60_000,
+  });
   const list = Array.isArray(res) ? res : [res];
 
   return points.map((_, i) => {
@@ -174,7 +178,11 @@ export async function searchPlaces(query: string, limit: number): Promise<Place[
   url.searchParams.set('language', 'en');
   url.searchParams.set('format', 'json');
 
-  const res = await fetchJson<OmGeocodingResponse>(url, { service: 'Open-Meteo Geocoding', retries: 1 });
+  const res = await fetchJson<OmGeocodingResponse>(url, {
+    service: 'Open-Meteo Geocoding',
+    retries: 1,
+    cacheTtlMs: 24 * 3600_000,
+  });
   return (res.results ?? []).map((r) => ({
     name: r.name,
     lat: r.latitude,

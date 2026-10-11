@@ -68,7 +68,11 @@ export async function reverseGeocode({ lat, lon }: LatLon): Promise<string | nul
   url.searchParams.set('limit', '1');
   url.searchParams.set('appid', requireSecret('OPENWEATHER_API_KEY'));
 
-  const res = await fetchJson<Array<{ name?: string }>>(url, { service: SERVICE, retries: 2 });
+  const res = await fetchJson<Array<{ name?: string }>>(url, {
+    service: SERVICE,
+    retries: 2,
+    cacheTtlMs: 24 * 3600_000,
+  });
   return res[0]?.name ?? null;
 }
 
