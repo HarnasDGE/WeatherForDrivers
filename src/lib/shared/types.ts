@@ -200,11 +200,24 @@ export interface RouteSummary {
   arrivalTime: string;
 }
 
+/** Driving time from the start at a distance along the route (from TomTom guidance points). */
+export interface RouteProgress {
+  /** Metres along the route from its start. */
+  offsetMeters: number;
+  /** Seconds of driving from the start to that offset. */
+  seconds: number;
+}
+
 /** One route variant (main route first, then up to 2 alternatives). */
 export interface Route {
   summary: RouteSummary;
   /** Full geometry of the route, start to end. */
   points: LatLon[];
+  /**
+   * Increasing samples of driving time along the route (first {0, 0}, last = summary length/time).
+   * Lets the server time each checkpoint without one routing call per point.
+   */
+  timeline: RouteProgress[];
 }
 
 /** GET /api/route */
@@ -217,8 +230,8 @@ export interface RouteData {
 
 /** POST /api/route-weather request body */
 export interface RouteWeatherRequest {
-  /** Routes to evaluate (max 3), usually `RouteData.routes` (only `points` is needed). */
-  routes: Array<Pick<Route, 'points'>>;
+  /** Routes to evaluate (max 3), usually `RouteData.routes` (`points`, plus `timeline` when known). */
+  routes: Array<Pick<Route, 'points'> & Partial<Pick<Route, 'timeline'>>>;
   /** Density of control points per route, integer 3..20 (legacy slider range). */
   controlPoints: number;
   /** ISO 8601 departure, now..+3 days; omitted = leave now. */
@@ -244,6 +257,43 @@ export interface RouteWeatherPoint extends LatLon {
   weatherCode: number | null;
   /** true = daylight; null when unknown. */
   isDay: boolean | null;
+  /** km/h at 10 m; null when unknown. */
+  windSpeed: number | null;
+  /** km/h at 10 m; null when unknown. */
+  windGusts: number | null;
+  /** Direction the wind blows FROM, compass degrees; null when unknown. */
+  windDirection: number | null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Departure windows (POST /api/departure-windows)                     */
+/* ------------------------------------------------------------------ */
+
+export interface DepartureWindowsRequest {
+  /** Checkpoints of the route with their driving time from the start (2..25). */
+  checkpoints: Array<LatLon & { offsetSeconds: number }>;
+  /** First departure, ISO 8601 (now..+3 days). */
+  start: string;
+  /** Number of departures to evaluate, 1..36. */
+  count: number;
+  /** Minutes between departures, 15..180. */
+  stepMinutes: number;
+}
+
+/** Weather at one checkpoint for one departure. */
+export interface WindowPoint {
+  /** Arrival at the checkpoint (ISO UTC, rounded to 15 min). */
+  time: string;
+  temperature: number | null;
+  weatherCode: number | null;
+  isDay: boolean | null;
+}
+
+export interface DepartureWindow {
+  /** ISO 8601 departure. */
+  departure: string;
+  /** Index-aligned with the request's checkpoints. */
+  points: WindowPoint[];
 }
 
 /** One element per requested route, in request order. */

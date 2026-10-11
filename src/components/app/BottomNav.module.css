@@ -5,7 +5,11 @@
   background: var(--surface);
   border-top: 1px solid var(--line);
   box-shadow: 0 -8px 24px -16px rgba(16, 24, 40, 0.3);
-  padding: 0 8px env(safe-area-inset-bottom);
+  padding: 0 4px env(safe-area-inset-bottom);
+}
+
+.item {
+  min-width: 0;
 }
 
 .item {
@@ -26,7 +30,7 @@
 .pill {
   display: grid;
   place-items: center;
-  width: 56px;
+  width: 52px;
   height: 30px;
   border-radius: 999px;
   transition: background-color 160ms;
@@ -41,8 +45,12 @@
   color: var(--accent);
 }
 
+.item > span:last-child {
+  white-space: nowrap;
+}
+
 .theme {
-  flex: 0 0 72px;
+  flex: 0 0 64px;
 }
 
 @media (min-width: 900px) {

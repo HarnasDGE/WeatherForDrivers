@@ -6,6 +6,8 @@ import styles from './BottomNav.module.css';
 
 const ITEMS: Array<{ tab: AppTab; label: string; icon: string }> = [
   { tab: 'drive', label: 'Drive', icon: 'directions_car' },
+  { tab: 'when', label: 'When', icon: 'schedule' },
+  { tab: 'exposure', label: 'Sun & wind', icon: 'wb_sunny' },
   { tab: 'forecast', label: 'Forecast', icon: 'partly_cloudy_day' },
 ];
 

@@ -103,10 +103,16 @@ export interface QuarterHourWeather {
   temperature2m: (number | null)[];
   weatherCode: (number | null)[];
   isDay: (number | null)[];
+  /** km/h */
+  windSpeed10m: (number | null)[];
+  /** km/h */
+  windGusts10m: (number | null)[];
+  /** degrees the wind blows from */
+  windDirection10m: (number | null)[];
 }
 
 /**
- * 15-minutely temperature / weather code / is_day for many locations in ONE
+ * 15-minutely temperature / weather code / is_day / wind for many locations in ONE
  * request (Open-Meteo accepts comma-separated coordinate lists). Times are UTC
  * (timezone=GMT) so they can be matched against absolute arrival instants.
  * Result order matches `points`.
@@ -120,7 +126,10 @@ export async function getQuarterHourWeather(
   const url = new URL('/v1/forecast', API_BASE.openMeteo);
   url.searchParams.set('latitude', points.map((p) => p.lat.toFixed(4)).join(','));
   url.searchParams.set('longitude', points.map((p) => p.lon.toFixed(4)).join(','));
-  url.searchParams.set('minutely_15', 'temperature_2m,weather_code,is_day');
+  url.searchParams.set(
+    'minutely_15',
+    'temperature_2m,weather_code,is_day,wind_speed_10m,wind_gusts_10m,wind_direction_10m',
+  );
   url.searchParams.set('timezone', 'GMT');
   url.searchParams.set('start_date', startDate);
   url.searchParams.set('end_date', endDate);
@@ -132,7 +141,15 @@ export async function getQuarterHourWeather(
     const m = list[i]?.minutely_15;
     const time = m?.time ?? [];
     const col = (name: string) => Array.from({ length: time.length }, (_, j) => (m?.[name]?.[j] ?? null) as number | null);
-    return { time, temperature2m: col('temperature_2m'), weatherCode: col('weather_code'), isDay: col('is_day') };
+    return {
+      time,
+      temperature2m: col('temperature_2m'),
+      weatherCode: col('weather_code'),
+      isDay: col('is_day'),
+      windSpeed10m: col('wind_speed_10m'),
+      windGusts10m: col('wind_gusts_10m'),
+      windDirection10m: col('wind_direction_10m'),
+    };
   });
 }
 

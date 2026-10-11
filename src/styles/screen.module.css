@@ -1,0 +1,42 @@
+/* Shared layout of the full-page tabs (When, Sun & wind): one scrolling column. */
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+}
+
+.column {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(20px + env(safe-area-inset-top)) var(--gutter) 40px;
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin-top: 4px;
+  color: var(--kerb);
+  font-weight: 600;
+}
+
+.section {
+  margin-top: 28px;
+}
+
+.heading {
+  font-size: var(--text-md);
+  font-weight: 800;
+}
+
+.note {
+  margin-top: 24px;
+  font-size: var(--text-xs);
+  color: var(--kerb);
+}

@@ -38,6 +38,12 @@ the token set; an inline script in `BaseLayout.astro` sets it before first paint
 - **Elevation:** layered soft shadows `--shadow-sm/md/lg/sheet`. Dark mode adds a hairline ring instead of relying on shadow alone.
 - **Shapes:** sheet 28px, cards and groups 20px, fields 14px, chips and the active-tab pill fully rounded.
 
+## Tabs
+
+Drive, When, Sun & wind, Forecast, plus the theme switch: five items in the bottom bar.
+- **When:** a bar per departure (now plus the next 24 full hours). Height is calmness, scaled between the best and worst departure. Colour is the worst condition, and a two-tone strip shows the dark share. The best one is outlined and preselected, with the recommendation card above.
+- **Sun & wind:** a strip map with two lanes (sun in your eyes, crosswind) over the trip length, using the same road band and dashed centre line, then a list of stretches with time, km range and one practical tip per kind.
+
 ## Day and night
 
 Driving in the dark is marked the same way everywhere:

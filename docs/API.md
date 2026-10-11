@@ -107,6 +107,7 @@ Place metadata (`name`, `countryCode`) is **not** included – take it from `/ap
     summary: { lengthInMeters, travelTimeInSeconds, trafficDelayInSeconds,
                departureTime, arrivalTime },   // ISO 8601 with offset
     points: LatLon[]                  // full geometry (legacy legs[0].points, renamed latitude/longitude -> lat/lon)
+    timeline: Array<{ offsetMeters, seconds }> // driving time along the route (TomTom guidance), {0,0} .. end
   }>
 }
 ```
@@ -125,6 +126,9 @@ Body (`Content-Type: application/json`, `RouteWeatherRequest`):
   departureTime?: string              // ISO 8601, now..+3 days; omitted = leave now
 }
 ```
+
+Each route may also carry `timeline` (`RouteProgress[]`, as returned by `/api/route`): checkpoints are then
+timed from it with no extra TomTom calls. Without it, the server asks TomTom once per checkpoint.
 
 `200 { data: RouteWeather[] }` – one item per route, **same order as the request**:
 
@@ -157,6 +161,23 @@ Leaflet: `L.tileLayer('/api/tiles/' + layer + '/{z}/{x}/{y}.png')`. Replaces leg
 API key in the browser. The OpenStreetMap base layer is public and may be loaded directly.
 Needs `OPENWEATHER_API_KEY`.
 
+## POST `/api/departure-windows` – weather along a route for many departures
+
+Body (`DepartureWindowsRequest`):
+
+```ts
+{
+  checkpoints: Array<{ lat, lon, offsetSeconds }>, // 2..25, driving time from the start (from /api/route-weather)
+  start: string,                                   // ISO, first departure (now..+3 days)
+  count: number,                                   // 1..36 departures
+  stepMinutes: number                              // 15..180 between departures
+}
+```
+
+`200 { data: DepartureWindow[] }` – `{ departure, points: Array<{ time, temperature, weatherCode, isDay }> }`,
+points index-aligned with `checkpoints`. Driving times are assumed equal for every departure (traffic ignored).
+One Open-Meteo request; no TomTom calls.
+
 ---
 
 ## Mock mode (demo data)
@@ -164,6 +185,6 @@ Needs `OPENWEATHER_API_KEY`.
 `isMockMode()` in `src/lib/server/config.ts`: `MOCK_API=true` forces it, `MOCK_API=false` disables it,
 otherwise it is on while `TOMTOM_API_KEY` or `OPENWEATHER_API_KEY` is missing.
 
-In mock mode `/api/route` and `/api/route-weather` return deterministic demo data (`src/lib/server/mock/`)
+In mock mode `/api/route`, `/api/route-weather` and `/api/departure-windows` return deterministic demo data (`src/lib/server/mock/`)
 with the same shapes as above. `/api/geocode` and `/api/forecast` (Open-Meteo, no key) always stay live.
 The page shows a "Demo data" badge while mock mode is on.

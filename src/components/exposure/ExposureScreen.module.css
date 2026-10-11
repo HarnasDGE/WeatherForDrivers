@@ -1,0 +1,134 @@
+.status {
+  margin-top: 28px;
+  color: var(--kerb);
+  font-weight: 600;
+}
+
+/* Two lanes over the length of the trip, like a strip map. */
+.ribbon {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: var(--radius-card);
+  background: var(--surface-raised);
+  box-shadow: var(--ring), var(--shadow-sm);
+}
+
+.lane + .lane {
+  margin-top: 14px;
+}
+
+.laneLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.count {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--kerb);
+}
+
+.track {
+  position: relative;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--road);
+  overflow: hidden;
+}
+
+/* Centre line, as on the road timeline. */
+.track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: repeating-linear-gradient(to right, var(--road-dash) 0 8px, transparent 8px 16px);
+  opacity: 0.7;
+}
+
+.track span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+}
+
+.track span[data-level='caution'] {
+  background: var(--marking);
+}
+
+.track span[data-level='danger'] {
+  background: var(--hazard);
+}
+
+.ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--kerb);
+  font-variant-numeric: tabular-nums;
+}
+
+.clear {
+  margin-top: 20px;
+  padding: 12px 14px;
+  border-left: 4px solid var(--clear);
+  border-radius: 4px var(--radius-sm) var(--radius-sm) 4px;
+  background: var(--verge);
+  font-weight: 600;
+}
+
+.list {
+  margin-top: 16px;
+}
+
+.item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.itemIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--verge);
+}
+
+.item[data-level='caution'] .itemIcon {
+  background: color-mix(in srgb, var(--marking) 30%, transparent);
+}
+
+.item[data-level='danger'] .itemIcon {
+  background: color-mix(in srgb, var(--hazard) 18%, transparent);
+  color: var(--hazard);
+}
+
+.itemTitle {
+  font-weight: 800;
+}
+
+.itemDetail {
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  color: var(--kerb);
+}
+
+.tip {
+  margin-top: 16px;
+  font-size: var(--text-sm);
+}

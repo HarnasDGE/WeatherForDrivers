@@ -1,5 +1,6 @@
 import type { LatLon, Place, Route, RouteType } from '@/lib/shared/types';
-import { ROAD_FACTOR, cumulativeMeters } from './geo';
+import { cumulativeMeters } from '@/lib/shared/geo';
+import { ROAD_FACTOR } from './weather-field';
 
 /** Demo replacement for TomTom routing: a main route and two alternatives bent around the straight line. */
 
@@ -45,6 +46,13 @@ export function mockRoutes(from: Place, to: Place, routeType: RouteType, departu
         arrivalTime: new Date(departure.getTime() + travelTimeInSeconds * 1000).toISOString(),
       },
       points,
+      // Traffic sits in the middle third, so checkpoint times are not a plain straight line.
+      timeline: [
+        { offsetMeters: 0, seconds: 0 },
+        { offsetMeters: lengthInMeters / 3, seconds: driving / 3 },
+        { offsetMeters: (2 * lengthInMeters) / 3, seconds: (2 * driving) / 3 + trafficDelayInSeconds },
+        { offsetMeters: lengthInMeters, seconds: travelTimeInSeconds },
+      ].map((p) => ({ offsetMeters: Math.round(p.offsetMeters), seconds: Math.round(p.seconds) })),
     };
   });
 }

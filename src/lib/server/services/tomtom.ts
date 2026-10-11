@@ -1,4 +1,4 @@
-import type { LatLon, Route, RouteType } from '@/lib/shared/types';
+import type { LatLon, Route, RouteProgress, RouteType } from '@/lib/shared/types';
 import { API_BASE, requireSecret } from '../config';
 import { fetchJson } from '../http';
 
@@ -18,6 +18,8 @@ interface TomTomRouteResponse {
   routes?: Array<{
     summary: TomTomSummary;
     legs: Array<{ points: Array<{ latitude: number; longitude: number }> }>;
+    /** Present with instructionsType; travelTimeInSeconds is cumulative from the start. */
+    guidance?: { instructions?: Array<{ routeOffsetInMeters: number; travelTimeInSeconds: number }> };
   }>;
 }
 
@@ -28,19 +30,19 @@ interface CalculateRouteOptions {
   withPoints?: boolean;
   /** Departure for traffic and arrival times (default: now). */
   departAt?: Date;
+  /** Ask for guidance points, which carry driving time along the route. */
+  withTimeline?: boolean;
 }
 
 const toLocation = (p: LatLon) => `${p.lat},${p.lon}`;
 
 async function calculateRouteRaw(from: LatLon, to: LatLon, options: CalculateRouteOptions) {
-  const url = new URL(
-    `/routing/1/calculateRoute/${toLocation(from)}:${toLocation(to)}/json`,
-    API_BASE.tomTom,
-  );
+  const url = new URL(`/routing/1/calculateRoute/${toLocation(from)}:${toLocation(to)}/json`, API_BASE.tomTom);
   url.searchParams.set('key', requireSecret('TOMTOM_API_KEY'));
   if (options.routeType) url.searchParams.set('routeType', options.routeType);
   if (options.maxAlternatives) url.searchParams.set('maxAlternatives', String(options.maxAlternatives));
   if (options.withPoints === false) url.searchParams.set('routeRepresentation', 'summaryOnly');
+  if (options.withTimeline) url.searchParams.set('instructionsType', 'coded');
   if (options.departAt && options.departAt.getTime() > Date.now()) {
     url.searchParams.set('departAt', options.departAt.toISOString());
   }
@@ -57,7 +59,7 @@ export async function calculateRoutes(
   routeType: RouteType,
   departAt?: Date,
 ): Promise<Route[]> {
-  const routes = await calculateRouteRaw(from, to, { routeType, maxAlternatives: 2, departAt });
+  const routes = await calculateRouteRaw(from, to, { routeType, maxAlternatives: 2, departAt, withTimeline: true });
   return routes.map((r) => ({
     summary: {
       lengthInMeters: r.summary.lengthInMeters,
@@ -67,7 +69,30 @@ export async function calculateRoutes(
       arrivalTime: r.summary.arrivalTime,
     },
     points: r.legs.flatMap((leg) => leg.points.map((p) => ({ lat: p.latitude, lon: p.longitude }))),
+    timeline: toTimeline(r.guidance?.instructions ?? [], r.summary),
   }));
+}
+
+/** Guidance points -> increasing {offset, seconds} samples from {0, 0} to the route's end. */
+function toTimeline(
+  instructions: Array<{ routeOffsetInMeters: number; travelTimeInSeconds: number }>,
+  summary: TomTomSummary,
+): RouteProgress[] {
+  const samples: RouteProgress[] = [{ offsetMeters: 0, seconds: 0 }];
+  for (const i of instructions) {
+    const last = samples[samples.length - 1];
+    if (i.routeOffsetInMeters > last.offsetMeters && i.travelTimeInSeconds >= last.seconds) {
+      samples.push({ offsetMeters: i.routeOffsetInMeters, seconds: i.travelTimeInSeconds });
+    }
+  }
+  const last = samples[samples.length - 1];
+  if (summary.lengthInMeters > last.offsetMeters) {
+    samples.push({
+      offsetMeters: summary.lengthInMeters,
+      seconds: Math.max(last.seconds, summary.travelTimeInSeconds),
+    });
+  }
+  return samples;
 }
 
 /**

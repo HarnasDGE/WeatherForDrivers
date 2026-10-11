@@ -1,6 +1,8 @@
-# WeatherForDrivers
-
-Pogoda dla kierowców, mobile first. Ekran **Drive**: trasa z wariantami i pogodą w punktach kontrolnych, liczoną na czas dojazdu, oraz ocena warunków na drodze. Ekran **Forecast**: prognoza dla miejscowości (teraz, 24 h, 5 dni).
+Pogoda dla kierowców, mobile first:
+- **Drive**: trasa z wariantami, pogoda w punktach kontrolnych liczona na czas dojazdu, ocena warunków, dzień/noc, godzina wyjazdu.
+- **When**: ta sama trasa sprawdzona dla każdego wyjazdu w najbliższych 24 h, z rekomendacją najlepszej godziny.
+- **Sun & wind**: odcinki z nisko stojącym słońcem w oczy i z silnym bocznym wiatrem.
+- **Forecast**: prognoza dla miejscowości (teraz, 24 h, 5 dni) z animowanym tłem pogody.
 
 Stack: Astro (SSR, adapter Node lokalnie, Vercel na Vercelu) + React islands + TypeScript + Redux Toolkit, Leaflet, CSS Modules.
 Design: `docs/DESIGN.md` (skill `frontend-design` w `.claude/skills/`).
@@ -21,7 +23,7 @@ Zmienne środowiskowe (`.env`, tylko po stronie serwera):
 | `UNSPLASH_ACCESS_KEY` | unsplash.com/developers |
 | `TOMTOM_API_KEY` | developer.tomtom.com |
 
-Open-Meteo nie wymaga klucza.
+Open-Meteo nie wymaga klucza. TomTom: jedno sprawdzenie trasy = 1 zapytanie (czasy dojazdu do punktów liczone z odpowiedzi trasy); darmowy plan to 20 000 zapytań o trasę miesięcznie.
 
 Tryb demo: bez `TOMTOM_API_KEY` / `OPENWEATHER_API_KEY` (albo z `MOCK_API=true`) trasy i pogoda na trasie to dane przykładowe z `src/lib/server/mock/`. W UI widać wtedy znacznik „Demo data”. Wyszukiwarka miejsc i prognoza (Open-Meteo) zawsze działają na żywo. Szczegóły: `docs/API.md`.
 

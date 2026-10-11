@@ -1,6 +1,8 @@
 import StoreProvider from '@/components/providers/StoreProvider';
 import DriveScreen from '@/components/drive/DriveScreen';
+import ExposureScreen from '@/components/exposure/ExposureScreen';
 import ForecastScreen from '@/components/forecast/ForecastScreen';
+import WhenScreen from '@/components/when/WhenScreen';
 import Notifications from '@/components/ui/Notifications';
 import { useApplyTheme } from '@/hooks/useTheme';
 import { useAppSelector } from '@/store/hooks';
@@ -22,7 +24,10 @@ function AppShell({ demo }: AppProps) {
   return (
     <div className={styles.shell}>
       <main className={styles.screen}>
-        {hydrated && (tab === 'drive' ? <DriveScreen demo={demo} /> : <ForecastScreen />)}
+        {hydrated && tab === 'drive' && <DriveScreen demo={demo} />}
+        {hydrated && tab === 'when' && <WhenScreen />}
+        {hydrated && tab === 'exposure' && <ExposureScreen />}
+        {hydrated && tab === 'forecast' && <ForecastScreen />}
       </main>
       <BottomNav />
       <Notifications />

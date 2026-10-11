@@ -1,9 +1,16 @@
-import { PLACE_ON_THE_ROAD, type LatLon, type RouteWeather, type RouteWeatherPoint } from '@/lib/shared/types';
+import {
+  PLACE_ON_THE_ROAD,
+  type LatLon,
+  type RouteProgress,
+  type RouteWeather,
+  type RouteWeatherPoint,
+} from '@/lib/shared/types';
+import { isUsableTimeline, pointOffsets, secondsAtOffset } from '@/lib/shared/route-timeline';
 import { ROUTE_WEATHER_CONCURRENCY, requireSecret } from '../config';
 import { HttpError } from '../errors';
 import { mapWithConcurrency } from '../http';
 import { roundToFifteenMinutes, toUtcDateString, toUtcMinuteString } from '../time';
-import { getQuarterHourWeather } from './openmeteo';
+import { getQuarterHourWeather, type QuarterHourWeather } from './openmeteo';
 import { reverseGeocode } from './openweather';
 import { getTravelSummary } from './tomtom';
 
@@ -11,15 +18,15 @@ import { getTravelSummary } from './tomtom';
  * Weather along routes - port of legacy `fetchWeatherInformation`
  * (_legacy/src/actions/roadActions.js). For each route:
  *  1. pick control points from the route geometry,
- *  2. ask TomTom for distance / travel time / arrival time from the route start,
+ *  2. time each point: from the route's own timeline (TomTom guidance, no extra calls),
+ *     or - for routes sent without one - one TomTom summary request per point,
  *  3. round the arrival to 15 min and look it up in Open-Meteo `minutely_15`,
  *  4. reverse-geocode the point name (OpenWeatherMap).
  *
- * Differences from legacy (same results, fewer/safer requests):
- *  - the `delay(index * 1000)` staggering is replaced by a bounded worker pool
- *    (ROUTE_WEATHER_CONCURRENCY) + retry with backoff on 429/5xx;
- *  - identical points (shared start/destination of alternatives) are fetched once;
- *  - the route start itself needs no TomTom call (distance 0, arrival = departure);
+ * Differences from legacy (same results, far fewer requests):
+ *  - with a timeline, a whole route check costs one TomTom request (the route itself);
+ *  - the fallback uses a bounded worker pool (ROUTE_WEATHER_CONCURRENCY) + retry with backoff;
+ *  - identical points (shared start/destination of alternatives) are looked up once;
  *  - Open-Meteo is queried once for all points (multi-location request);
  *  - times are matched as UTC instants, independent of the server timezone.
  */
@@ -40,81 +47,100 @@ export function findQuarterHourIndex(times: readonly string[], arrival: Date): n
 
 const pointKey = (p: LatLon) => `${p.lat},${p.lon}`;
 
-interface PointTravel {
+interface Checkpoint {
   point: LatLon;
   lengthInMeters: number;
   travelTimeInSeconds: number;
-  arrival: Date;
-  name: string;
+}
+
+type RouteInput = { points: readonly LatLon[]; timeline?: RouteProgress[] };
+
+/** Checkpoints timed from the route's timeline (no network). */
+function timedFromTimeline(points: readonly LatLon[], timeline: RouteProgress[], controlPoints: number): Checkpoint[] {
+  const offsets = pointOffsets(points, timeline[timeline.length - 1].offsetMeters);
+  const indexed = points.map((point, index) => ({ point, index }));
+  return selectControlPoints(indexed, controlPoints).map(({ point, index }) => ({
+    point,
+    lengthInMeters: Math.round(offsets[index]),
+    travelTimeInSeconds: Math.round(secondsAtOffset(timeline, offsets[index])),
+  }));
+}
+
+/** Fallback for routes without a timeline: one TomTom summary request per checkpoint. */
+async function timedByTomTom(points: readonly LatLon[], controlPoints: number, departure: Date): Promise<Checkpoint[]> {
+  requireSecret('TOMTOM_API_KEY');
+  const start = points[0];
+  const selected = selectControlPoints(points, controlPoints);
+  return mapWithConcurrency(selected, ROUTE_WEATHER_CONCURRENCY, async (point) => {
+    if (pointKey(point) === pointKey(start)) return { point, lengthInMeters: 0, travelTimeInSeconds: 0 };
+    const summary = await getTravelSummary(start, point, departure);
+    if (!summary)
+      throw new HttpError(502, 'UPSTREAM_ERROR', `TomTom found no route to control point ${pointKey(point)}.`);
+    return { point, lengthInMeters: summary.lengthInMeters, travelTimeInSeconds: summary.travelTimeInSeconds };
+  });
+}
+
+/** Weather columns of one series at the arrival, or nulls when the forecast does not cover it. */
+function weatherAt(series: QuarterHourWeather | undefined, arrival: Date) {
+  const index = series ? findQuarterHourIndex(series.time, arrival) : -1;
+  const value = (column: (number | null)[] | undefined) => (index === -1 ? null : (column?.[index] ?? null));
+  const temperature = value(series?.temperature2m);
+  const isDay = value(series?.isDay);
+  return {
+    temperature: temperature === null ? null : Math.round(temperature * 10) / 10,
+    weatherCode: value(series?.weatherCode),
+    isDay: isDay === null ? null : isDay === 1,
+    windSpeed: value(series?.windSpeed10m),
+    windGusts: value(series?.windGusts10m),
+    windDirection: value(series?.windDirection10m),
+  };
 }
 
 export async function getWeatherAlongRoutes(
-  routes: ReadonlyArray<{ points: readonly LatLon[] }>,
+  routes: ReadonlyArray<RouteInput>,
   controlPoints: number,
   departure = new Date(),
 ): Promise<RouteWeather[]> {
   // Fail fast with a readable config error before doing any work.
-  requireSecret('TOMTOM_API_KEY');
   requireSecret('OPENWEATHER_API_KEY');
 
-  const now = departure;
-  const perRoute = routes.map((route) => ({
-    start: route.points[0] as LatLon,
-    selected: selectControlPoints(route.points, controlPoints),
-  }));
+  const perRoute = await Promise.all(
+    routes.map((route) =>
+      isUsableTimeline(route.timeline)
+        ? timedFromTimeline(route.points, route.timeline, controlPoints)
+        : timedByTomTom(route.points, controlPoints, departure),
+    ),
+  );
 
-  // Unique (start, point) pairs across all routes.
-  const tasks = new Map<string, { start: LatLon; point: LatLon }>();
-  for (const { start, selected } of perRoute) {
-    for (const point of selected) tasks.set(`${pointKey(start)}>${pointKey(point)}`, { start, point });
-  }
-  const taskList = [...tasks.entries()];
-
-  const travels = await mapWithConcurrency(taskList, ROUTE_WEATHER_CONCURRENCY, async ([, { start, point }]) => {
-    const isStart = pointKey(start) === pointKey(point);
-    const [summary, name] = await Promise.all([
-      isStart ? null : getTravelSummary(start, point, departure),
-      reverseGeocodeSafe(point),
-    ]);
-    if (!isStart && !summary) {
-      throw new HttpError(502, 'UPSTREAM_ERROR', `TomTom found no route to control point ${pointKey(point)}.`);
-    }
-    return {
-      point,
-      lengthInMeters: summary?.lengthInMeters ?? 0,
-      travelTimeInSeconds: summary?.travelTimeInSeconds ?? 0,
-      arrival: summary ? new Date(summary.arrivalTime) : now,
-      name: name ?? PLACE_ON_THE_ROAD,
-    } satisfies PointTravel;
-  });
-  const travelByKey = new Map(taskList.map(([key], i) => [key, travels[i] as PointTravel]));
-
-  // One Open-Meteo request for all unique points, covering all arrival dates.
-  const uniquePoints = [...new Map(travels.map((t) => [pointKey(t.point), t.point])).values()];
-  const roundedArrivals = travels.map((t) => roundToFifteenMinutes(t.arrival));
-  const dates = roundedArrivals.map(toUtcDateString).sort();
-  const weatherSeries = await getQuarterHourWeather(uniquePoints, dates[0] ?? toUtcDateString(now), dates.at(-1) ?? toUtcDateString(now));
+  // Names and weather once per unique point.
+  const uniquePoints = [...new Map(perRoute.flat().map((c) => [pointKey(c.point), c.point])).values()];
+  const arrivals = perRoute
+    .flat()
+    .map((c) => roundToFifteenMinutes(new Date(departure.getTime() + c.travelTimeInSeconds * 1000)));
+  const dates = arrivals.map(toUtcDateString).sort();
+  const [names, weatherSeries] = await Promise.all([
+    mapWithConcurrency(uniquePoints, ROUTE_WEATHER_CONCURRENCY, reverseGeocodeSafe),
+    getQuarterHourWeather(
+      uniquePoints,
+      dates[0] ?? toUtcDateString(departure),
+      dates.at(-1) ?? toUtcDateString(departure),
+    ),
+  ]);
+  const nameByPoint = new Map(uniquePoints.map((p, i) => [pointKey(p), names[i]]));
   const seriesByPoint = new Map(uniquePoints.map((p, i) => [pointKey(p), weatherSeries[i]]));
 
-  return perRoute.map(({ start, selected }, routeIndex) => ({
+  return perRoute.map((checkpoints, routeIndex) => ({
     routeIndex,
-    points: selected.map((point): RouteWeatherPoint => {
-      const travel = travelByKey.get(`${pointKey(start)}>${pointKey(point)}`) as PointTravel;
-      const series = seriesByPoint.get(pointKey(point));
-      const rounded = roundToFifteenMinutes(travel.arrival);
-      const index = series ? findQuarterHourIndex(series.time, travel.arrival) : -1;
-      const temperature = index === -1 ? null : (series?.temperature2m[index] ?? null);
-      const isDay = index === -1 ? null : (series?.isDay[index] ?? null);
+    points: checkpoints.map(({ point, lengthInMeters, travelTimeInSeconds }): RouteWeatherPoint => {
+      const arrival = roundToFifteenMinutes(new Date(departure.getTime() + travelTimeInSeconds * 1000));
       return {
         lat: point.lat,
         lon: point.lon,
-        name: travel.name,
-        lengthInMeters: travel.lengthInMeters,
-        travelTimeInSeconds: travel.travelTimeInSeconds,
-        time: rounded.toISOString(),
-        temperature: temperature === null ? null : Math.round(temperature * 10) / 10,
-        weatherCode: index === -1 ? null : (series?.weatherCode[index] ?? null),
-        isDay: isDay === null ? null : isDay === 1,
+        name: nameByPoint.get(pointKey(point)) ?? PLACE_ON_THE_ROAD,
+        lengthInMeters,
+        travelTimeInSeconds,
+        time: arrival.toISOString(),
+        ...weatherAt(seriesByPoint.get(pointKey(point)), arrival),
       };
     }),
   }));

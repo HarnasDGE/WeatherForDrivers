@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { hydrate } from '../hydrate';
 
-export const APP_TABS = ['drive', 'forecast'] as const;
+export const APP_TABS = ['drive', 'when', 'exposure', 'forecast'] as const;
 export type AppTab = (typeof APP_TABS)[number];
 
 export const THEME_PREFERENCES = ['system', 'light', 'dark'] as const;

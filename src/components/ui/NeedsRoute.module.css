@@ -1,0 +1,28 @@
+.empty {
+  padding-top: 40px;
+  max-width: 36ch;
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.text {
+  margin-top: 8px;
+  color: var(--kerb);
+}
+
+.plan {
+  margin-top: 20px;
+  height: 52px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: var(--radius-field);
+  background: var(--marking);
+  color: var(--on-marking);
+  font-weight: 800;
+  box-shadow: 0 6px 16px -6px rgba(245, 194, 17, 0.7);
+}

@@ -1,4 +1,8 @@
 import type { LatLon } from '@/lib/shared/types';
+import { isDaylight } from '@/lib/shared/sun';
+
+/** Roads are longer than straight lines; used to turn geometry length into a believable road length. */
+export const ROAD_FACTOR = 1.18;
 
 /**
  * Deterministic, spatially smooth fake weather, so demo routes show a believable story
@@ -12,6 +16,10 @@ export interface FieldSample {
   temperature: number;
   /** km/h */
   windSpeed: number;
+  /** km/h */
+  windGusts: number;
+  /** degrees the wind blows from */
+  windDirection: number;
   /** % */
   humidity: number;
   isDay: boolean;
@@ -28,22 +36,9 @@ function wetness({ lat, lon }: LatLon, hours: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
-const toRad = (deg: number) => (deg * Math.PI) / 180;
-
-/** Sun above the horizon (incl. refraction), from a simple declination / hour-angle model - good to a few minutes. */
-export function isDaylight({ lat, lon }: LatLon, at: Date): boolean {
-  const dayOfYear = Math.floor((at.getTime() - Date.UTC(at.getUTCFullYear(), 0, 0)) / 86_400_000);
-  const declination = toRad(23.44 * Math.sin((2 * Math.PI * (284 + dayOfYear)) / 365));
-  const solarHours = at.getUTCHours() + at.getUTCMinutes() / 60 + lon / 15;
-  const hourAngle = toRad(15 * (solarHours - 12));
-  const elevation = Math.asin(
-    Math.sin(toRad(lat)) * Math.sin(declination) + Math.cos(toRad(lat)) * Math.cos(declination) * Math.cos(hourAngle),
-  );
-  return elevation > toRad(-0.833);
-}
-
 /** Rough local solar hour from UTC time and longitude. */
-const localHour = (date: Date, lon: number) => (((date.getUTCHours() + date.getUTCMinutes() / 60 + lon / 15) % 24) + 24) % 24;
+const localHour = (date: Date, lon: number) =>
+  (((date.getUTCHours() + date.getUTCMinutes() / 60 + lon / 15) % 24) + 24) % 24;
 
 export function sampleWeather(point: LatLon, at: Date): FieldSample {
   const hour = localHour(at, point.lon);
@@ -67,6 +62,11 @@ export function sampleWeather(point: LatLon, at: Date): FieldSample {
     weatherCode,
     temperature,
     windSpeed: Math.round(8 + wet * 30),
+    windGusts: Math.round((8 + wet * 30) * 1.6),
+    // Mostly westerly, veering slowly across the map.
+    windDirection: Math.round(
+      (((250 + 70 * Math.sin(point.lat * 0.9 - point.lon * 0.4 + hours * 0.02)) % 360) + 360) % 360,
+    ),
     humidity: Math.round(45 + wet * 50),
     isDay: isDaylight(point, at),
   };

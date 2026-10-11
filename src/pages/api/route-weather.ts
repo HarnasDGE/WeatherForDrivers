@@ -1,5 +1,12 @@
-import type { LatLon, RouteWeatherRequest } from '@/lib/shared/types';
-import { handle, isValidLatLon, methodNotAllowed, jsonData, optionalDeparture, parseNumberInRange } from '@/lib/server/api';
+import type { LatLon, RouteProgress, RouteWeatherRequest } from '@/lib/shared/types';
+import {
+  handle,
+  isValidLatLon,
+  methodNotAllowed,
+  jsonData,
+  optionalDeparture,
+  parseNumberInRange,
+} from '@/lib/server/api';
 import { isMockMode } from '@/lib/server/config';
 import { badRequest } from '@/lib/server/errors';
 import { mockWeatherAlongRoutes } from '@/lib/server/mock/route-weather';
@@ -7,6 +14,7 @@ import { getWeatherAlongRoutes } from '@/lib/server/services/route-weather';
 
 const MAX_ROUTES = 3;
 const MAX_POINTS_PER_ROUTE = 50_000;
+const MAX_TIMELINE_SAMPLES = 5_000;
 const CONTROL_POINTS_MIN = 3;
 const CONTROL_POINTS_MAX = 20;
 
@@ -45,7 +53,10 @@ function parseBody(body: unknown): RouteWeatherRequest {
     if (!points.every(isValidLatLon)) {
       throw badRequest(`"routes[${i}].points" must contain only { lat, lon } numbers in valid ranges.`);
     }
-    return { points: (points as LatLon[]).map(({ lat, lon }) => ({ lat, lon })) };
+    return {
+      points: (points as LatLon[]).map(({ lat, lon }) => ({ lat, lon })),
+      timeline: parseTimeline((route as { timeline?: unknown }).timeline, i),
+    };
   });
 
   return {
@@ -55,4 +66,22 @@ function parseBody(body: unknown): RouteWeatherRequest {
     }),
     departureTime: optionalDeparture(departureTime, 'departureTime')?.toISOString(),
   };
+}
+
+/** Optional `timeline`: up to 5000 {offsetMeters, seconds} samples with non-negative finite numbers. */
+function parseTimeline(raw: unknown, routeIndex: number): RouteProgress[] | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  const valid =
+    Array.isArray(raw) &&
+    raw.length <= MAX_TIMELINE_SAMPLES &&
+    raw.every((p) => {
+      const { offsetMeters, seconds } = (p ?? {}) as Record<string, unknown>;
+      return [offsetMeters, seconds].every((v) => typeof v === 'number' && Number.isFinite(v) && v >= 0);
+    });
+  if (!valid) {
+    throw badRequest(
+      `"routes[${routeIndex}].timeline" must be an array of up to ${MAX_TIMELINE_SAMPLES} { offsetMeters, seconds }.`,
+    );
+  }
+  return (raw as RouteProgress[]).map(({ offsetMeters, seconds }) => ({ offsetMeters, seconds }));
 }

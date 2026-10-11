@@ -1,5 +1,7 @@
 import type {
   ApiResponse,
+  DepartureWindow,
+  DepartureWindowsRequest,
   Forecast,
   LatLon,
   Place,
@@ -79,6 +81,14 @@ export function fetchRoute(from: PlaceInput, to: PlaceInput, routeType?: RouteTy
 
 export function fetchRouteWeather(body: RouteWeatherRequest): Promise<RouteWeather[]> {
   return request('/api/route-weather', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+export function fetchDepartureWindows(body: DepartureWindowsRequest): Promise<DepartureWindow[]> {
+  return request('/api/departure-windows', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
