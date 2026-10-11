@@ -56,6 +56,16 @@ export function isMockMode(): boolean {
   return !readEnv('TOMTOM_API_KEY') || !readEnv('OPENWEATHER_API_KEY');
 }
 
+/** Default global TomTom route requests per UTC day: the free tier's 20,000 / month spread over 30 days. */
+const DEFAULT_TOMTOM_DAILY_BUDGET = 600;
+
+/** TOMTOM_DAILY_BUDGET (positive integer) or the default. */
+export function tomTomDailyBudget(): number {
+  const raw = (import.meta.env.TOMTOM_DAILY_BUDGET || process.env.TOMTOM_DAILY_BUDGET)?.trim();
+  const value = raw ? Number(raw) : NaN;
+  return Number.isInteger(value) && value > 0 ? value : DEFAULT_TOMTOM_DAILY_BUDGET;
+}
+
 export const API_BASE = {
   openWeather: 'https://api.openweathermap.org',
   openWeatherTiles: 'https://tile.openweathermap.org',

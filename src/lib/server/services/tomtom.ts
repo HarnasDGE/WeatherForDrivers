@@ -1,6 +1,8 @@
 import type { LatLon, Route, RouteProgress, RouteType } from '@/lib/shared/types';
-import { API_BASE, requireSecret } from '../config';
+import { API_BASE, requireSecret, tomTomDailyBudget } from '../config';
+import { rateLimited } from '../errors';
 import { fetchJson } from '../http';
+import { DailyBudget } from '../rate-limit';
 
 /** TomTom Routing API (requires TOMTOM_API_KEY). */
 
@@ -34,6 +36,21 @@ interface CalculateRouteOptions {
   withTimeline?: boolean;
 }
 
+/** Routes change with traffic: cache briefly. */
+const ROUTE_CACHE_TTL_MS = 2 * 60_000;
+
+/** Global (per process) daily guard for real TomTom calls; cache hits and mock mode do not consume it. */
+let dailyBudget: DailyBudget | undefined;
+
+function consumeDailyBudget(): void {
+  dailyBudget ??= new DailyBudget(tomTomDailyBudget());
+  const { allowed, retryAfterSeconds } = dailyBudget.take();
+  if (!allowed) {
+    console.warn('[rate-limit] TomTom daily budget exhausted');
+    throw rateLimited('Too many route checks today. Try again tomorrow.', retryAfterSeconds);
+  }
+}
+
 const toLocation = (p: LatLon) => `${p.lat},${p.lon}`;
 
 async function calculateRouteRaw(from: LatLon, to: LatLon, options: CalculateRouteOptions) {
@@ -47,7 +64,12 @@ async function calculateRouteRaw(from: LatLon, to: LatLon, options: CalculateRou
     url.searchParams.set('departAt', options.departAt.toISOString());
   }
 
-  const res = await fetchJson<TomTomRouteResponse>(url, { service: SERVICE, retries: 2 });
+  const res = await fetchJson<TomTomRouteResponse>(url, {
+    service: SERVICE,
+    retries: 2,
+    cacheTtlMs: ROUTE_CACHE_TTL_MS,
+    onUpstreamCall: consumeDailyBudget,
+  });
   if (!res.routes?.length) return [];
   return res.routes;
 }

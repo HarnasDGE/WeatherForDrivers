@@ -16,6 +16,7 @@ TypeScript types live in [`src/lib/shared/types.ts`](../src/lib/shared/types.ts)
 | 400  | `BAD_REQUEST`        | missing/invalid parameter or body                               |
 | 404  | `NOT_FOUND`          | nothing found (place, image, route) or unknown `/api/*` path     |
 | 405  | `METHOD_NOT_ALLOWED` | wrong HTTP method                                               |
+| 429  | `RATE_LIMITED`       | too many requests from this client IP, or the daily TomTom budget is used up; `Retry-After` header (seconds) is set |
 | 500  | `CONFIG_MISSING_KEY` | API key missing in server env (`.env`, see `.env.example`)      |
 | 500  | `INTERNAL_ERROR`     | unexpected server error                                         |
 | 502  | `UPSTREAM_ERROR`     | external API failed / rejected key / rate limited               |
@@ -179,6 +180,42 @@ points index-aligned with `checkpoints`. Driving times are assumed equal for eve
 One Open-Meteo request; no TomTom calls.
 
 ---
+
+## Caching and rate limiting
+
+Goal: protect the free upstream quotas (TomTom: 20,000 route requests / month). All state below is **in memory**.
+
+**Upstream cache** (`src/lib/server/cache.ts`, opt-in `cacheTtlMs` on `fetchJson`): TTL + LRU (500 entries). Key = upstream URL
+with secrets masked (`redactUrl`), so keys never contain API keys. Concurrent identical requests share one in-flight promise;
+errors are not cached. TTLs: Open-Meteo forecast and quarter-hour weather 10 min, Open-Meteo geocoding 24 h,
+OpenWeather reverse geocoding 24 h, TomTom routes 2 min (traffic changes).
+
+**HTTP cache** (`Cache-Control`, set by `jsonData`): GET endpoints with `cacheSeconds` send
+`public, max-age=N, s-maxage=N, stale-while-revalidate=N` so browsers and the Vercel CDN can reuse them
+(`/api/geocode` 24 h, `/api/forecast` 10 min, `/api/weather` 5 min, `/api/place-image` 24 h). `/api/route`, POST endpoints
+and all errors are `no-store` (traffic/time dependent or request-body dependent).
+
+**Rate limits** (`src/middleware.ts`, `src/lib/server/rate-limit.ts`), per client IP (`x-forwarded-for`, `x-real-ip`, then the
+socket address), token buckets:
+
+| scope | limit |
+| ----- | ----- |
+| every `/api/*` except tiles | 120 / minute |
+| `/api/tiles/*` | 600 / minute |
+| `/api/route` (TomTom) | 15 / minute and 150 / day |
+| TomTom calls, all clients together | `TOMTOM_DAILY_BUDGET` per UTC day (default 600 = 20,000 / 30) |
+
+The budget is counted in `services/tomtom.ts` only when a request really goes to TomTom: cache hits and mock mode do not
+consume it. `/api/route-weather` and `/api/departure-windows` are covered by the general limit and the daily budget
+(they call TomTom only when no route geometry is supplied or as a fallback). Over a limit the response is
+`429 { error: { code: "RATE_LIMITED", message } }` with a `Retry-After` header.
+
+**Limits of this approach (best effort):** the cache, buckets and the daily budget live in process memory. On Vercel every
+function instance has its own copy and they are recycled at any time, so the effective limits are looser than configured
+(roughly multiplied by the number of warm instances) and reset on cold starts; the CDN `s-maxage` cache is shared and
+helps most. Behind a standalone Node server without a trusted proxy, `x-forwarded-for` can be spoofed by clients.
+Upgrade path (not implemented): keep counters and the cache in a shared store such as Upstash Redis or Vercel KV
+(atomic `INCR` with expiry for the buckets and the daily budget), keeping the same pure interfaces.
 
 ## Mock mode (demo data)
 

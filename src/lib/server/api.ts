@@ -9,9 +9,19 @@ import { HttpError, badRequest } from './errors';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8' };
 
+/**
+ * `no-store` by default. With `cacheSeconds` (GET endpoints whose answer is the same for everyone):
+ * browser `max-age`, shared-cache (Vercel CDN) `s-maxage`, and `stale-while-revalidate` so the CDN can
+ * serve a stale copy while it refreshes in the background.
+ */
+export function cacheControl(cacheSeconds?: number): string {
+  if (!cacheSeconds || cacheSeconds <= 0) return 'no-store';
+  return `public, max-age=${cacheSeconds}, s-maxage=${cacheSeconds}, stale-while-revalidate=${cacheSeconds}`;
+}
+
 export function jsonData<T>(data: T, init?: { status?: number; cacheSeconds?: number }): Response {
   const headers: Record<string, string> = { ...JSON_HEADERS };
-  headers['Cache-Control'] = init?.cacheSeconds ? `public, max-age=${init.cacheSeconds}` : 'no-store';
+  headers['Cache-Control'] = cacheControl(init?.cacheSeconds);
   const body: ApiSuccessResponse<T> = { data };
   return new Response(JSON.stringify(body), { status: init?.status ?? 200, headers });
 }
@@ -21,10 +31,9 @@ export function jsonError(error: unknown): Response {
     error instanceof HttpError ? error : new HttpError(500, 'INTERNAL_ERROR', 'Unexpected server error.');
   if (!(error instanceof HttpError)) console.error('[api] unexpected error', error);
   const body: ApiErrorResponse = { error: { code: httpError.code, message: httpError.message } };
-  return new Response(JSON.stringify(body), {
-    status: httpError.status,
-    headers: { ...JSON_HEADERS, 'Cache-Control': 'no-store' },
-  });
+  const headers: Record<string, string> = { ...JSON_HEADERS, 'Cache-Control': 'no-store' };
+  if (httpError.retryAfterSeconds) headers['Retry-After'] = String(httpError.retryAfterSeconds);
+  return new Response(JSON.stringify(body), { status: httpError.status, headers });
 }
 
 /** Wraps a handler so any thrown error becomes a JSON `{ error }` response. */

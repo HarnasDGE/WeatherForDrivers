@@ -1,4 +1,5 @@
 import { UPSTREAM_TIMEOUT_MS } from './config';
+import { TtlLruCache } from './cache';
 import { HttpError } from './errors';
 
 export interface FetchUpstreamOptions {
@@ -9,6 +10,20 @@ export interface FetchUpstreamOptions {
   retries?: number;
   init?: RequestInit;
 }
+
+export interface FetchJsonOptions extends FetchUpstreamOptions {
+  /**
+   * Opt-in in-memory cache for GET JSON responses, ms. Key = URL with secrets stripped (redactUrl);
+   * concurrent identical calls share one in-flight request. Failures are never cached.
+   */
+  cacheTtlMs?: number;
+  /** Called right before a real upstream request is made (not on cache hits), e.g. to count a quota. */
+  onUpstreamCall?: () => void;
+}
+
+const JSON_CACHE_MAX_ENTRIES = 500;
+const jsonCache = new TtlLruCache<unknown>(JSON_CACHE_MAX_ENTRIES);
+const inFlight = new Map<string, Promise<unknown>>();
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -65,8 +80,40 @@ export async function fetchUpstream(url: string | URL, options: FetchUpstreamOpt
   }
 }
 
-/** fetchUpstream + JSON parsing. `T` is the expected (unvalidated) upstream shape. */
-export async function fetchJson<T>(url: string | URL, options: FetchUpstreamOptions): Promise<T> {
+/** fetchUpstream + JSON parsing, optionally cached (`cacheTtlMs`). `T` is the expected (unvalidated) upstream shape. */
+export async function fetchJson<T>(url: string | URL, options: FetchJsonOptions): Promise<T> {
+  const { cacheTtlMs, onUpstreamCall, ...upstreamOptions } = options;
+  const method = (options.init?.method ?? 'GET').toUpperCase();
+  if (!cacheTtlMs || cacheTtlMs <= 0 || method !== 'GET') {
+    onUpstreamCall?.();
+    return requestJson<T>(url, upstreamOptions);
+  }
+
+  // redactUrl() masks key/appid/...: secrets never become part of a cache key.
+  const key = redactUrl(url);
+  const cached = jsonCache.get(key);
+  if (cached !== undefined) {
+    console.info(`[cache] hit ${options.service}`);
+    return cached as T;
+  }
+  const pending = inFlight.get(key);
+  if (pending) {
+    console.info(`[cache] shared in-flight ${options.service}`);
+    return pending as Promise<T>;
+  }
+
+  console.info(`[cache] miss ${options.service}`);
+  const promise = (async () => {
+    onUpstreamCall?.();
+    const value = await requestJson<T>(url, upstreamOptions);
+    jsonCache.set(key, value, cacheTtlMs);
+    return value;
+  })().finally(() => inFlight.delete(key));
+  inFlight.set(key, promise);
+  return promise;
+}
+
+async function requestJson<T>(url: string | URL, options: FetchUpstreamOptions): Promise<T> {
   const response = await fetchUpstream(url, {
     ...options,
     init: { ...options.init, headers: { Accept: 'application/json', ...options.init?.headers } },
