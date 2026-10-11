@@ -5,7 +5,10 @@ import type { RootState } from './root-reducer';
 export const STORAGE_KEY = 'weatherfordrivers:v2';
 
 type WeatherPersisted = Pick<RootState['weather'], 'place' | 'forecast' | 'savedPlaces'>;
-type RoutePersisted = Pick<RootState['route'], 'query' | 'routeType' | 'controlPoints' | 'favoriteRoutes'>;
+type RoutePersisted = Pick<
+  RootState['route'],
+  'query' | 'routeType' | 'controlPoints' | 'favoriteRoutes' | 'recentPlaces'
+>;
 type UiPersisted = RootState['ui'];
 
 export interface PersistedState {
@@ -25,10 +28,10 @@ export function loadPersistedState(): PersistedState {
 
 function pickPersisted(state: RootState): PersistedState {
   const { place, forecast, savedPlaces } = state.weather;
-  const { query, routeType, controlPoints, favoriteRoutes } = state.route;
+  const { query, routeType, controlPoints, favoriteRoutes, recentPlaces } = state.route;
   return {
     weather: { place, forecast, savedPlaces },
-    route: { query, routeType, controlPoints, favoriteRoutes },
+    route: { query, routeType, controlPoints, favoriteRoutes, recentPlaces },
     ui: state.ui,
   };
 }

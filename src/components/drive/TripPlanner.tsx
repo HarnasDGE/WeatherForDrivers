@@ -9,9 +9,12 @@ import { ROUTE_TYPES } from '@/lib/shared/types';
 import type { Place, RouteType } from '@/lib/shared/types';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
+  addRecentPlace,
+  clearRecentPlaces,
   selectControlPoints,
   selectDeparture,
   selectFavoriteRoutes,
+  selectRecentPlaces,
   selectRouteData,
   selectRouteQuery,
   selectRouteType,
@@ -63,6 +66,7 @@ export default function TripPlanner({ onClose, onSubmit, onPickSaved }: TripPlan
   const controlPoints = useAppSelector(selectControlPoints);
   const saved = useAppSelector(selectFavoriteRoutes);
   const departure = useAppSelector(selectDeparture);
+  const recent = useAppSelector(selectRecentPlaces);
 
   const [from, setFrom] = useState<FieldValue>(() => ({
     text: query.from,
@@ -82,6 +86,8 @@ export default function TripPlanner({ onClose, onSubmit, onPickSaved }: TripPlan
   const activePlace = active === 'from' ? from.place : active === 'to' ? to.place : null;
   const showSuggestions = active !== null && places.length > 0 && activePlace?.name !== activeText;
 
+  const showRecent = active !== null && activeText.trim() === '' && recent.length > 0;
+
   useEffect(() => {
     (query.from ? toRef : fromRef).current?.focus();
     const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
@@ -91,6 +97,7 @@ export default function TripPlanner({ onClose, onSubmit, onPickSaved }: TripPlan
   }, []);
 
   const pick = (place: Place) => {
+    dispatch(addRecentPlace(place));
     if (active === 'from') {
       setFrom({ text: place.name, place });
       toRef.current?.focus();
@@ -182,6 +189,18 @@ export default function TripPlanner({ onClose, onSubmit, onPickSaved }: TripPlan
             <PlaceSuggestionList id="planner-suggestions" places={places} onPick={pick} />
           ) : (
             <>
+              {showRecent && (
+                <section className={styles.recent}>
+                  <div className={styles.recentHead}>
+                    <h2>Recent</h2>
+                    <button type="button" className={styles.clear} onClick={() => dispatch(clearRecentPlaces())}>
+                      Clear
+                    </button>
+                  </div>
+                  <PlaceSuggestionList id="planner-recent" places={recent} onPick={pick} icon="history" />
+                </section>
+              )}
+
               <DeparturePicker value={departure} onChange={(value) => dispatch(setDeparture(value))} />
 
               <fieldset className={styles.choice}>

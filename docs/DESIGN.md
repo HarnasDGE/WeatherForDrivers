@@ -44,6 +44,10 @@ Drive, When, Sun & wind, Forecast, plus the theme switch: five items in the bott
 - **When:** a bar per departure (now plus the next 24 full hours). Height is calmness, scaled between the best and worst departure. Colour is the worst condition, and a two-tone strip shows the dark share. The best one is outlined and preselected, with the recommendation card above.
 - **Sun & wind:** a strip map with two lanes (sun in your eyes, crosswind) over the trip length, using the same road band and dashed centre line, then a list of stretches with time, km range and one practical tip per kind.
 
+## Planner extras
+
+Empty planner field shows a Recent list (history icon, same rows as place suggestions, plain Clear text button). The trip header has a share icon next to save and refresh; without Web Share it copies the link and says "Link copied".
+
 ## Day and night
 
 Driving in the dark is marked the same way everywhere:

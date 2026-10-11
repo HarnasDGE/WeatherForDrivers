@@ -8,10 +8,12 @@ interface PlaceSuggestionListProps {
   id: string;
   places: Place[];
   onPick: (place: Place) => void;
+  /** Leading icon, defaults to a map pin. */
+  icon?: string;
 }
 
 /** Search results under a place field; region and country tell same-named towns apart. */
-export default function PlaceSuggestionList({ id, places, onPick }: PlaceSuggestionListProps) {
+export default function PlaceSuggestionList({ id, places, onPick, icon = 'location_on' }: PlaceSuggestionListProps) {
   return (
     <ul id={id} className={styles.list} role="listbox">
       {places.map((place) => (
@@ -23,7 +25,7 @@ export default function PlaceSuggestionList({ id, places, onPick }: PlaceSuggest
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => onPick(place)}
           >
-            <Icon name="location_on" className={styles.icon} />
+            <Icon name={icon} className={styles.icon} />
             <span className={styles.text}>
               <span className={styles.name}>{place.name}</span>
               <span className={styles.details}>{placeDetails(place)}</span>
