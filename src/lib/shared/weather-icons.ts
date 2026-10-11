@@ -1,51 +1,53 @@
-/** WMO weather code -> OpenWeatherMap icon number + description (ported from legacy iconsMethods.js). */
-const WEATHER_CODES: Record<number, { icon: string; description: string }> = {
-  0: { icon: '01', description: 'Clear sky' },
-  1: { icon: '02', description: 'Mainly clear' },
-  2: { icon: '02', description: 'Partly cloudy' },
-  3: { icon: '02', description: 'Overcast' },
-  45: { icon: '50', description: 'Fog' },
-  48: { icon: '50', description: 'Depositing rime fog' },
-  51: { icon: '09', description: 'Light drizzle' },
-  53: { icon: '09', description: 'Moderate drizzle' },
-  55: { icon: '09', description: 'Dense drizzle' },
-  56: { icon: '13', description: 'Light freezing drizzle' },
-  57: { icon: '13', description: 'Dense freezing drizzle' },
-  61: { icon: '10', description: 'Slight rain' },
-  63: { icon: '10', description: 'Moderate rain' },
-  65: { icon: '10', description: 'Heavy rain' },
-  66: { icon: '13', description: 'Light freezing rain' },
-  67: { icon: '13', description: 'Heavy freezing rain' },
-  71: { icon: '13', description: 'Slight snow fall' },
-  73: { icon: '13', description: 'Moderate snow fall' },
-  75: { icon: '13', description: 'Heavy intensity snow fall' },
-  77: { icon: '13', description: 'Snow grains' },
-  80: { icon: '10', description: 'Slight rain shower' },
-  81: { icon: '10', description: 'Moderate rain shower' },
-  82: { icon: '10', description: 'Violent rain shower' },
-  85: { icon: '13', description: 'Slight snow shower' },
-  86: { icon: '13', description: 'Heavy snow shower' },
-  95: { icon: '11', description: 'Thunderstorm' },
-  96: { icon: '11', description: 'Slight thunderstorm' },
-  99: { icon: '11', description: 'Heavy hail thunderstorm' },
-};
-
-const FALLBACK = { icon: '50', description: 'Unknown' };
-
-const iconUrl = (icon: string, isDay: boolean) =>
-  `https://openweathermap.org/img/wn/${icon}${isDay ? 'd' : 'n'}@2x.png`;
-
-/** Icon URL for a WMO code. Unknown/missing code gives the (night) fog icon, like the legacy app. */
-export function getIconLink(weatherCode: number | null | undefined, isDay: boolean | null | undefined): string {
-  const entry = weatherCode == null ? undefined : WEATHER_CODES[weatherCode];
-  return iconUrl((entry ?? FALLBACK).icon, entry ? Boolean(isDay) : false);
+/** WMO weather code -> Material Symbols icon name + description. */
+interface WeatherCodeInfo {
+  day: string;
+  night: string;
+  description: string;
 }
 
-/** Like `getIconLink`, but day/night is derived from the local hour (8..19 = day), as in legacy. */
-export function getIconLinkForHour(weatherCode: number | null | undefined, hour: number): string {
-  return getIconLink(weatherCode, hour > 7 && hour < 20);
+const same = (icon: string, description: string): WeatherCodeInfo => ({ day: icon, night: icon, description });
+
+const WEATHER_CODES: Record<number, WeatherCodeInfo> = {
+  0: { day: 'clear_day', night: 'clear_night', description: 'Clear sky' },
+  1: { day: 'partly_cloudy_day', night: 'partly_cloudy_night', description: 'Mainly clear' },
+  2: { day: 'partly_cloudy_day', night: 'partly_cloudy_night', description: 'Partly cloudy' },
+  3: same('cloud', 'Overcast'),
+  45: same('foggy', 'Fog'),
+  48: same('foggy', 'Freezing fog'),
+  51: same('rainy_light', 'Light drizzle'),
+  53: same('rainy_light', 'Drizzle'),
+  55: same('rainy_light', 'Dense drizzle'),
+  56: same('rainy_snow', 'Freezing drizzle'),
+  57: same('rainy_snow', 'Dense freezing drizzle'),
+  61: same('rainy', 'Light rain'),
+  63: same('rainy', 'Rain'),
+  65: same('rainy_heavy', 'Heavy rain'),
+  66: same('rainy_snow', 'Freezing rain'),
+  67: same('rainy_snow', 'Heavy freezing rain'),
+  71: same('weather_snowy', 'Light snow'),
+  73: same('weather_snowy', 'Snow'),
+  75: same('snowing_heavy', 'Heavy snow'),
+  77: same('weather_snowy', 'Snow grains'),
+  80: same('rainy', 'Rain showers'),
+  81: same('rainy', 'Heavy showers'),
+  82: same('rainy_heavy', 'Violent showers'),
+  85: same('weather_snowy', 'Snow showers'),
+  86: same('snowing_heavy', 'Heavy snow showers'),
+  95: same('thunderstorm', 'Thunderstorm'),
+  96: same('thunderstorm', 'Thunderstorm with hail'),
+  99: same('thunderstorm', 'Thunderstorm with heavy hail'),
+};
+
+const UNKNOWN = same('question_mark', 'No data');
+
+const lookup = (code: number | null | undefined) => (code == null ? undefined : WEATHER_CODES[code]) ?? UNKNOWN;
+
+/** Icon name for a WMO code; night variants when `isDay` is false. */
+export function getWeatherSymbol(weatherCode: number | null | undefined, isDay: boolean | null | undefined = true): string {
+  const info = lookup(weatherCode);
+  return isDay === false ? info.night : info.day;
 }
 
 export function getWeatherDescription(weatherCode: number | null | undefined): string {
-  return (weatherCode == null ? undefined : WEATHER_CODES[weatherCode])?.description ?? FALLBACK.description;
+  return lookup(weatherCode).description;
 }

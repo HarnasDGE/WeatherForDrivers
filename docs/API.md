@@ -53,7 +53,8 @@ Needs `OPENWEATHER_API_KEY`. Replaces legacy `fetchDataForPlace` / `fetchDataFro
   lat, lon, timezone: 'Europe/Warsaw', utcOffsetSeconds: 7200,
   hourly: { time: string[]  /* 120 items, local "YYYY-MM-DDTHH:MM" */,
             temperature2m, precipitationProbability, precipitation, rain, showers,
-            snowfall, weatherCode, cloudCover },            // (number|null)[] aligned with time
+            snowfall, weatherCode, cloudCover,
+            windGusts10m /* km/h */, visibility /* m */, isDay /* 1|0 */ }, // (number|null)[] aligned with time
   daily:  { time: string[]  /* 5 items, "YYYY-MM-DD" */,
             weatherCode, temperatureMax, temperatureMin,
             sunrise, sunset /* local "YYYY-MM-DDTHH:MM" strings */,
@@ -93,6 +94,8 @@ Place metadata (`name`, `countryCode`) is **not** included – take it from `/ap
 | `from`      | yes      | place name, geocoded to the first match                                   |
 | `to`        | yes      | place name                                                                |
 | `routeType` | no       | `fastest` (default) \| `shortest` \| `eco` \| `thrilling` (`RouteType`)    |
+| `fromLat`, `fromLon` | no | coordinates of a place picked from `/api/geocode`; skips geocoding `from` (both or neither) |
+| `toLat`, `toLon`     | no | same for `to`                                                    |
 
 `200 { data: RouteData }`:
 
@@ -107,7 +110,7 @@ Place metadata (`name`, `countryCode`) is **not** included – take it from `/ap
 }
 ```
 
-`404` when a place or a route is not found. Needs `TOMTOM_API_KEY`.
+`404` when a place or a route is not found. Needs `TOMTOM_API_KEY` (demo data in mock mode, see below).
 "Make alternative the main route" (legacy `changeMainRoute`) is a pure client-side reorder – no endpoint.
 
 ## POST `/api/route-weather` – weather at control points along routes
@@ -151,3 +154,14 @@ Needs `TOMTOM_API_KEY` and `OPENWEATHER_API_KEY`.
 Leaflet: `L.tileLayer('/api/tiles/' + layer + '/{z}/{x}/{y}.png')`. Replaces legacy `Map.js`, which put the
 API key in the browser. The OpenStreetMap base layer is public and may be loaded directly.
 Needs `OPENWEATHER_API_KEY`.
+
+---
+
+## Mock mode (demo data)
+
+`isMockMode()` in `src/lib/server/config.ts`: `MOCK_API=true` forces it, `MOCK_API=false` disables it,
+otherwise it is on while `TOMTOM_API_KEY` or `OPENWEATHER_API_KEY` is missing.
+
+In mock mode `/api/route` and `/api/route-weather` return deterministic demo data (`src/lib/server/mock/`)
+with the same shapes as above. `/api/geocode` and `/api/forecast` (Open-Meteo, no key) always stay live.
+The page shows a "Demo data" badge while mock mode is on.

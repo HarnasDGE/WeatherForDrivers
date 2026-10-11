@@ -1,10 +1,8 @@
 import type {
   ApiResponse,
-  CurrentWeather,
   Forecast,
   LatLon,
   Place,
-  PlaceImage,
   RouteData,
   RouteType,
   RouteWeather,
@@ -56,10 +54,6 @@ const qs = (params: Record<string, string | number | undefined>) => {
   return search.toString();
 };
 
-export function fetchCurrentWeather({ lat, lon }: LatLon, name?: string): Promise<CurrentWeather> {
-  return request(`/api/weather?${qs({ lat, lon, name })}`);
-}
-
 export function fetchForecast({ lat, lon }: LatLon): Promise<Forecast> {
   return request(`/api/forecast?${qs({ lat, lon })}`);
 }
@@ -68,12 +62,18 @@ export function fetchPlaces(query: string, limit?: number): Promise<Place[]> {
   return request(`/api/geocode?${qs({ q: query, limit })}`);
 }
 
-export function fetchPlaceImage(query: string): Promise<PlaceImage> {
-  return request(`/api/place-image?${qs({ q: query })}`);
-}
+/** A typed place name (geocoded on the server) or a place picked from suggestions (coordinates are sent along). */
+export type PlaceInput = string | Place;
 
-export function fetchRoute(from: string, to: string, routeType?: RouteType): Promise<RouteData> {
-  return request(`/api/route?${qs({ from, to, routeType })}`);
+export const placeName = (place: PlaceInput) => (typeof place === 'string' ? place : place.name);
+
+const placeParams = (key: 'from' | 'to', place: PlaceInput) =>
+  typeof place === 'string'
+    ? { [key]: place }
+    : { [key]: place.name, [`${key}Lat`]: place.lat, [`${key}Lon`]: place.lon };
+
+export function fetchRoute(from: PlaceInput, to: PlaceInput, routeType?: RouteType): Promise<RouteData> {
+  return request(`/api/route?${qs({ ...placeParams('from', from), ...placeParams('to', to), routeType })}`);
 }
 
 export function fetchRouteWeather(body: RouteWeatherRequest): Promise<RouteWeather[]> {
@@ -83,6 +83,3 @@ export function fetchRouteWeather(body: RouteWeatherRequest): Promise<RouteWeath
     body: JSON.stringify(body),
   });
 }
-
-/** Tile URL template for Leaflet's `L.tileLayer` (same-origin proxy, no key in the browser). */
-export const weatherTileUrl = (layer: string) => `/api/tiles/${layer}/{z}/{x}/{y}.png`;

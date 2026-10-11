@@ -1,0 +1,51 @@
+/* Design tokens - see docs/DESIGN.md. Dark values follow the system setting (night driving). */
+:root {
+  color-scheme: light dark;
+
+  --asphalt: #262b33;
+  --kerb: #646c78;
+  --verge: #edf0f3;
+  --surface: #ffffff;
+  --backdrop: #dfe3e8;
+  --marking: #f4c20d;
+  --on-marking: #262b33;
+  --hazard: #d23c2f;
+  --clear: #1d8a6b;
+  --line: rgba(38, 43, 51, 0.12);
+  --road: #3a414b;
+  --road-dash: #ffffff;
+  --shadow: 0 1px 2px rgba(38, 43, 51, 0.12), 0 8px 24px rgba(38, 43, 51, 0.14);
+
+  --font: 'Overpass', system-ui, sans-serif;
+  --text-xs: 0.8125rem; /* 13 */
+  --text-sm: 0.9375rem; /* 15 */
+  --text-md: 1.0625rem; /* 17 */
+  --text-lg: 1.375rem; /* 22 */
+  --text-xl: 2.125rem; /* 34 */
+  --text-xxl: 3.5rem; /* 56 */
+
+  --radius-sheet: 22px;
+  --radius-card: 16px;
+  --radius-field: 12px;
+
+  --nav-height: calc(64px + env(safe-area-inset-bottom));
+  --gutter: 16px;
+  --panel-width: 420px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --asphalt: #e9ecef;
+    --kerb: #9ba3ae;
+    --verge: #262c34;
+    --surface: #1a1f25;
+    --backdrop: #12161b;
+    --on-marking: #1a1f25;
+    --hazard: #ff6b5e;
+    --clear: #4cc9a4;
+    --line: rgba(233, 236, 239, 0.12);
+    --road: #535c68;
+    --road-dash: #e9ecef;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+}

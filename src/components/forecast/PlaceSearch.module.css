@@ -1,0 +1,50 @@
+.search {
+  position: relative;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 14px;
+  border-radius: var(--radius-field);
+  background: var(--verge);
+  border: 2px solid transparent;
+}
+
+.field:focus-within {
+  border-color: var(--asphalt);
+  background: var(--surface);
+}
+
+.icon {
+  color: var(--kerb);
+}
+
+.field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font-size: var(--text-md);
+  font-weight: 600;
+  outline: none;
+}
+
+.field input::placeholder {
+  color: var(--kerb);
+  font-weight: 400;
+}
+
+.dropdown {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  padding: 0 16px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}

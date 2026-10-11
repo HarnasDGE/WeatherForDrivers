@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly OPENWEATHER_API_KEY?: string;
   readonly UNSPLASH_ACCESS_KEY?: string;
   readonly TOMTOM_API_KEY?: string;
+  /** "true" / "false" - see isMockMode() in src/lib/server/config.ts. */
+  readonly MOCK_API?: string;
 }
 
 interface ImportMeta {

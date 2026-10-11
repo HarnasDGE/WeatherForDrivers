@@ -1,69 +1,32 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { CurrentWeather, Forecast, Place, PlaceImage } from '@/lib/shared/types';
-import type { TimeOfDay } from '@/lib/shared/time-of-day';
+import type { Forecast, Place } from '@/lib/shared/types';
 import { hydrate } from '../hydrate';
-
-export const CONTENT_TABS = ['Main Info', 'Maps', 'Along The Road'] as const;
-export type ContentTab = (typeof CONTENT_TABS)[number];
 
 export type LoadStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
 
-export interface FavoritePlace {
-  place: Place;
-  current: CurrentWeather;
-  forecast: Forecast;
-  image: PlaceImage | null;
-}
-
+/** Place forecast (the "Forecast" tab). */
 export interface WeatherState {
   place: Place | null;
-  current: CurrentWeather | null;
   forecast: Forecast | null;
-  image: PlaceImage | null;
-  timeOfDay: TimeOfDay | null;
-  /** Index (0..4) of the day selected in the daily forecast. */
-  selectedDay: number;
-  content: ContentTab;
   status: LoadStatus;
   error: string | null;
-  favoritePlaces: FavoritePlace[];
-  favoritesRefreshing: boolean;
+  savedPlaces: Place[];
   /** true once localStorage has been read on the client (always false during SSR). */
   hydrated: boolean;
 }
 
-export interface PlaceLoaded {
-  place: Place;
-  current: CurrentWeather;
-  forecast: Forecast;
-  image: PlaceImage | null;
-  timeOfDay: TimeOfDay;
-}
-
-export interface FavoriteUpdate {
-  place: Place;
-  current: CurrentWeather;
-  forecast: Forecast;
-}
-
 const initialState: WeatherState = {
   place: null,
-  current: null,
   forecast: null,
-  image: null,
-  timeOfDay: null,
-  selectedDay: 0,
-  content: 'Main Info',
   status: 'idle',
   error: null,
-  favoritePlaces: [],
-  favoritesRefreshing: false,
+  savedPlaces: [],
   hydrated: false,
 };
 
 export const isSamePlace = (a: Place, b: Place) =>
-  a.name === b.name && (a.countryCode ?? '') === (b.countryCode ?? '');
+  a.name === b.name && (a.countryCode ?? '') === (b.countryCode ?? '') && (a.admin1 ?? '') === (b.admin1 ?? '');
 
 const weatherSlice = createSlice({
   name: 'weather',
@@ -73,45 +36,25 @@ const weatherSlice = createSlice({
       state.status = 'loading';
       state.error = null;
     },
-    placeLoaded(state, action: PayloadAction<PlaceLoaded>) {
-      Object.assign(state, action.payload, { status: 'succeeded', error: null, selectedDay: 0 });
+    placeLoaded(state, action: PayloadAction<{ place: Place; forecast: Forecast }>) {
+      state.place = action.payload.place;
+      state.forecast = action.payload.forecast;
+      state.status = 'succeeded';
     },
     placeFailed(state, action: PayloadAction<string>) {
       state.status = 'failed';
       state.error = action.payload;
     },
-    selectDay(state, action: PayloadAction<number>) {
-      state.selectedDay = action.payload;
+    /** Saves the shown place, or removes it when it is already saved. */
+    toggleSavedPlace(state) {
+      const { place } = state;
+      if (!place) return;
+      const index = state.savedPlaces.findIndex((p) => isSamePlace(p, place));
+      if (index === -1) state.savedPlaces.push(place);
+      else state.savedPlaces.splice(index, 1);
     },
-    changeContent(state, action: PayloadAction<ContentTab>) {
-      state.content = action.payload;
-    },
-    /** Adds the currently shown place to favourites (no-op when empty or already there). */
-    addFavoritePlace(state) {
-      const { place, current, forecast, image } = state;
-      if (!place || !current || !forecast) return;
-      if (state.favoritePlaces.some((f) => isSamePlace(f.place, place))) return;
-      state.favoritePlaces.push({ place, current, forecast, image });
-    },
-    removeFavoritePlace(state, action: PayloadAction<number>) {
-      state.favoritePlaces.splice(action.payload, 1);
-    },
-    favoritesRefreshRequested(state) {
-      state.favoritesRefreshing = true;
-    },
-    /** Merges fresh data into favourites by place identity (entries removed meanwhile are ignored). */
-    favoritesRefreshed(state, action: PayloadAction<FavoriteUpdate[]>) {
-      state.favoritesRefreshing = false;
-      for (const update of action.payload) {
-        const fav = state.favoritePlaces.find((f) => isSamePlace(f.place, update.place));
-        if (fav) {
-          fav.current = update.current;
-          fav.forecast = update.forecast;
-        }
-      }
-    },
-    favoritesRefreshFailed(state) {
-      state.favoritesRefreshing = false;
+    removeSavedPlace(state, action: PayloadAction<number>) {
+      state.savedPlaces.splice(action.payload, 1);
     },
   },
   extraReducers: (builder) => {
@@ -122,48 +65,25 @@ const weatherSlice = createSlice({
     });
   },
   selectors: {
-    selectWeather: (state) => state,
     selectPlace: (state) => state.place,
-    selectCurrentWeather: (state) => state.current,
     selectForecast: (state) => state.forecast,
-    selectPlaceImage: (state) => state.image,
-    selectTimeOfDay: (state) => state.timeOfDay,
-    selectSelectedDay: (state) => state.selectedDay,
-    selectContent: (state) => state.content,
     selectWeatherStatus: (state) => state.status,
     selectWeatherError: (state) => state.error,
-    selectFavoritePlaces: (state) => state.favoritePlaces,
-    selectFavoritesRefreshing: (state) => state.favoritesRefreshing,
+    selectSavedPlaces: (state) => state.savedPlaces,
+    selectIsPlaceSaved: (state) => state.place !== null && state.savedPlaces.some((p) => isSamePlace(p, state.place!)),
     selectHydrated: (state) => state.hydrated,
   },
 });
 
-export const {
-  placeRequested,
-  placeLoaded,
-  placeFailed,
-  selectDay,
-  changeContent,
-  addFavoritePlace,
-  removeFavoritePlace,
-  favoritesRefreshRequested,
-  favoritesRefreshed,
-  favoritesRefreshFailed,
-} = weatherSlice.actions;
+export const { placeRequested, placeLoaded, placeFailed, toggleSavedPlace, removeSavedPlace } = weatherSlice.actions;
 
 export const {
-  selectWeather,
   selectPlace,
-  selectCurrentWeather,
   selectForecast,
-  selectPlaceImage,
-  selectTimeOfDay,
-  selectSelectedDay,
-  selectContent,
   selectWeatherStatus,
   selectWeatherError,
-  selectFavoritePlaces,
-  selectFavoritesRefreshing,
+  selectSavedPlaces,
+  selectIsPlaceSaved,
   selectHydrated,
 } = weatherSlice.selectors;
 

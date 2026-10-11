@@ -1,0 +1,93 @@
+.bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+}
+
+.trip {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: none;
+  text-align: left;
+}
+
+.searchIcon {
+  color: var(--asphalt);
+}
+
+.prompt {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.ends {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* The trip glyph: a dot for the start, a square for the destination, joined by a short road. */
+.ends::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: var(--road);
+}
+
+.end {
+  position: relative;
+  padding-left: 24px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.end::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -6px;
+  background: var(--surface);
+  border: 3px solid var(--road);
+  box-sizing: content-box;
+}
+
+.end[data-kind='start']::before {
+  border-radius: 50%;
+}
+
+.end[data-kind='finish']::before {
+  border-radius: 2px;
+}
+
+.demo {
+  flex: none;
+  margin-right: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--marking);
+  color: var(--on-marking);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  cursor: help;
+}

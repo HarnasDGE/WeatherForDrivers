@@ -133,6 +133,12 @@ export interface HourlyForecast {
   weatherCode: (number | null)[];
   /** % */
   cloudCover: (number | null)[];
+  /** km/h */
+  windGusts10m: (number | null)[];
+  /** metres */
+  visibility: (number | null)[];
+  /** 1 = daylight, 0 = night */
+  isDay: (number | null)[];
 }
 
 /** Daily arrays are index-aligned with `time` ("YYYY-MM-DD", local date). */
@@ -217,9 +223,12 @@ export interface RouteWeatherRequest {
   controlPoints: number;
 }
 
+/** `RouteWeatherPoint.name` when the point could not be named. */
+export const PLACE_ON_THE_ROAD = 'Place on the road';
+
 /** Weather at one control point along a route. */
 export interface RouteWeatherPoint extends LatLon {
-  /** Reverse-geocoded name, "Place on the road" when unknown. */
+  /** Reverse-geocoded name, PLACE_ON_THE_ROAD when unknown. */
   name: string;
   /** Driving distance from the route start, metres. */
   lengthInMeters: number;

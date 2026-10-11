@@ -1,0 +1,78 @@
+.section {
+  margin-top: 28px;
+}
+
+.heading {
+  font-size: var(--text-md);
+  font-weight: 800;
+}
+
+.day {
+  display: grid;
+  grid-template-columns: 1fr 32px minmax(150px, 1.2fr);
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.symbol {
+  color: var(--kerb);
+}
+
+.temps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.min {
+  width: 32px;
+  text-align: right;
+  color: var(--kerb);
+  font-weight: 600;
+}
+
+.max {
+  width: 32px;
+  font-weight: 800;
+}
+
+.track {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--verge);
+}
+
+.fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: var(--road);
+}
+
+.extra {
+  font-size: var(--text-xs);
+  color: var(--kerb);
+  text-align: right;
+}

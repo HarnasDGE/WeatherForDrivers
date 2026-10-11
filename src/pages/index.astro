@@ -1,11 +1,13 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import Footer from '@/components/layout/Footer.astro';
-import WeatherApp from '@/components/app/WeatherApp';
+import App from '@/components/app/App';
+import { isMockMode } from '@/lib/server/config';
+
+// Rendered per request, so the badge follows the server env without a rebuild.
+const demo = isMockMode();
 ---
 
 <BaseLayout>
-  <!-- client:only: the store reads localStorage and the map components need Leaflet (browser only). -->
-  <WeatherApp client:only="react" />
-  <Footer />
+  <!-- client:only: the store reads localStorage and the map needs Leaflet (browser only). -->
+  <App client:only="react" demo={demo} />
 </BaseLayout>

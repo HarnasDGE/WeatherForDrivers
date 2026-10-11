@@ -1,0 +1,124 @@
+/* Leaflet layer classes (global: Leaflet renders these outside React). */
+
+.leaflet-container {
+  background: var(--verge);
+  font-family: var(--font);
+}
+
+.leaflet-control-attribution {
+  font-size: 10px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent) !important;
+  color: var(--kerb);
+}
+
+.leaflet-control-attribution a {
+  color: var(--kerb);
+}
+
+/* Routes: CSS strokes beat Leaflet's presentation attributes, so colours follow the theme. */
+.route-alt {
+  stroke: color-mix(in srgb, var(--road) 45%, var(--surface));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  cursor: pointer;
+}
+
+.route-main {
+  stroke: var(--road);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route-dash {
+  stroke: var(--road-dash);
+  stroke-opacity: 0.9;
+}
+
+.route-edge {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-opacity: 0.9;
+}
+
+.route-edge--caution {
+  stroke: var(--marking);
+}
+
+.route-edge--danger {
+  stroke: var(--hazard);
+}
+
+.route-badge span {
+  display: inline-block;
+  transform: translate(-50%, -50%);
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--asphalt);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.trip-pin {
+  background: var(--surface);
+  border: 5px solid var(--road);
+  box-shadow: var(--shadow);
+}
+
+.trip-pin--start {
+  border-radius: 50%;
+}
+
+.trip-pin--end {
+  border-radius: 3px;
+}
+
+/* Checkpoint signs: a plate on a short post, the post foot sits on the road. */
+.sign__plate {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 7px 3px 4px;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--asphalt);
+  border: 2px solid var(--line);
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+
+.sign__plate::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  width: 2px;
+  height: 10px;
+  margin-left: -1px;
+  background: var(--road);
+}
+
+.sign__plate .icon {
+  font-size: 20px;
+}
+
+.sign__plate b {
+  font-size: var(--text-sm);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.sign__plate[data-level='caution'] {
+  border-color: var(--marking);
+}
+
+.sign__plate[data-level='danger'] {
+  border-color: var(--hazard);
+}

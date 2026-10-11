@@ -1,0 +1,168 @@
+.road {
+  --band: 30px;
+  --edge: var(--road);
+  margin-top: 8px;
+}
+
+.stop {
+  display: grid;
+  grid-template-columns: 48px var(--band) 1fr;
+  column-gap: 14px;
+  min-height: 84px;
+}
+
+.stop[data-level='caution'] {
+  --edge: var(--marking);
+}
+
+.stop[data-level='danger'] {
+  --edge: var(--hazard);
+}
+
+.time {
+  padding-top: 14px;
+  text-align: right;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The asphalt band. Rows touch, so the bands join into one road. */
+.band {
+  position: relative;
+  display: block;
+  background: var(--road);
+  box-shadow:
+    inset 4px 0 0 var(--edge),
+    inset -4px 0 0 var(--edge);
+}
+
+/* Dashed centre line. */
+.band::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  margin-left: -1.5px;
+  background: repeating-linear-gradient(to bottom, var(--road-dash) 0 10px, transparent 10px 22px);
+  opacity: 0.85;
+}
+
+.stop[data-position='start'] .band {
+  margin-top: 16px;
+  border-radius: 8px 8px 0 0;
+}
+
+.stop[data-position='finish'] .band {
+  height: 40px;
+  border-radius: 0 0 8px 8px;
+}
+
+.marker {
+  position: absolute;
+  z-index: 1;
+  top: 16px;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 4px solid var(--edge);
+}
+
+.stop[data-position='start'] .marker {
+  top: 2px;
+  border-color: var(--road);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.stop[data-position='finish'] .marker {
+  top: 16px;
+  border-radius: 3px;
+  border-color: var(--road);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.stop[data-level='caution'] .marker,
+.stop[data-level='danger'] .marker {
+  border-color: var(--edge);
+}
+
+.info {
+  min-width: 0;
+  padding: 12px 0 18px;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.temp {
+  flex: none;
+  font-size: var(--text-lg);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.weather {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.symbol {
+  color: var(--kerb);
+}
+
+.detail {
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--kerb);
+}
+
+.loading {
+  display: grid;
+  grid-template-columns: 48px var(--band, 30px) 1fr;
+  column-gap: 14px;
+  align-items: center;
+  min-height: 220px;
+  margin-top: 8px;
+}
+
+.loading .band {
+  grid-column: 2;
+  align-self: stretch;
+  border-radius: 8px;
+}
+
+.loading p {
+  color: var(--kerb);
+  font-weight: 600;
+}
+
+.band[data-moving='true']::before {
+  animation: drive 0.6s linear infinite;
+}
+
+@keyframes drive {
+  from {
+    background-position-y: 0;
+  }
+  to {
+    background-position-y: 22px;
+  }
+}

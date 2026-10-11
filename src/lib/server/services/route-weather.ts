@@ -1,4 +1,4 @@
-import type { LatLon, RouteWeather, RouteWeatherPoint } from '@/lib/shared/types';
+import { PLACE_ON_THE_ROAD, type LatLon, type RouteWeather, type RouteWeatherPoint } from '@/lib/shared/types';
 import { ROUTE_WEATHER_CONCURRENCY, requireSecret } from '../config';
 import { HttpError } from '../errors';
 import { mapWithConcurrency } from '../http';
@@ -23,8 +23,6 @@ import { getTravelSummary } from './tomtom';
  *  - Open-Meteo is queried once for all points (multi-location request);
  *  - times are matched as UTC instants, independent of the server timezone.
  */
-
-export const PLACE_ON_THE_ROAD = 'Place on the road';
 
 /**
  * Legacy control-point selection: every `interval`-th point plus the last one,

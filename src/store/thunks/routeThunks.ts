@@ -1,4 +1,5 @@
 import * as api from '@/lib/client/api';
+import type { PlaceInput } from '@/lib/client/api';
 import { showNotification } from '../slices/notificationsSlice';
 import {
   routeFailed,
@@ -14,17 +15,19 @@ import type { FavoriteRoute } from '../slices/routeSlice';
 import { errorMessage } from './types';
 import type { AppThunk } from './types';
 
-/** Fetches the route (main + alternatives) for the typed place names using the current `routeType`. */
+const trimInput = (place: PlaceInput): PlaceInput => (typeof place === 'string' ? place.trim() : place);
+
+/** Fetches the route (main + alternatives) using the current `routeType`. Picked places skip server-side geocoding. */
 export const fetchRoute =
-  (from: string, to: string): AppThunk<boolean> =>
+  (from: PlaceInput, to: PlaceInput): AppThunk<boolean> =>
   async (dispatch, getState) => {
-    const start = from.trim();
-    const end = to.trim();
-    if (!start || !end) {
-      dispatch(showNotification('Enter both start and destination!', 'alert'));
+    const start = trimInput(from);
+    const end = trimInput(to);
+    if (!api.placeName(start) || !api.placeName(end)) {
+      dispatch(showNotification('Enter where you start and where you are going.', 'alert'));
       return false;
     }
-    dispatch(routeRequested({ from: start, to: end }));
+    dispatch(routeRequested({ from: api.placeName(start), to: api.placeName(end) }));
     try {
       const data = await api.fetchRoute(start, end, getState().route.routeType);
       dispatch(routeLoaded(data));
@@ -44,7 +47,7 @@ export const fetchRoute =
 export const fetchRouteWeather = (): AppThunk<boolean> => async (dispatch, getState) => {
   const { routeData, controlPoints } = getState().route;
   if (!routeData || routeData.routes.length === 0) {
-    dispatch(showNotification('Route information is empty.', 'alert'));
+    dispatch(showNotification('Check a route first.', 'alert'));
     return false;
   }
   const requested = routeData.routes;
@@ -70,7 +73,7 @@ export const fetchRouteWeather = (): AppThunk<boolean> => async (dispatch, getSt
 
 /** Route + weather along it (legacy `fetchAllDataAboutRoute`). */
 export const fetchRouteWithWeather =
-  (from: string, to: string): AppThunk<boolean> =>
+  (from: PlaceInput, to: PlaceInput): AppThunk<boolean> =>
   async (dispatch) => {
     if (!(await dispatch(fetchRoute(from, to)))) return false;
     return dispatch(fetchRouteWeather());
@@ -82,6 +85,6 @@ export const loadFavoriteRoute =
   async (dispatch) => {
     dispatch(setRouteType(favorite.routeType));
     dispatch(setControlPoints(favorite.controlPoints));
-    return dispatch(fetchRouteWithWeather(favorite.from.name, favorite.to.name));
+    return dispatch(fetchRouteWithWeather(favorite.from, favorite.to));
   };
 

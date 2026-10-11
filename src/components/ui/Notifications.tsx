@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { clearNotification, selectNotification } from '@/store/slices/notificationsSlice';
 import type { NotificationType } from '@/store/slices/notificationsSlice';
+import Icon from './Icon';
+import styles from './Notifications.module.css';
 
 const ICONS: Record<NotificationType, string> = {
   confirm: 'check_circle',
@@ -11,7 +13,7 @@ const ICONS: Record<NotificationType, string> = {
 };
 
 /** How long a notification stays visible. Errors get more time to be read. */
-const VISIBLE_MS: Record<NotificationType, number> = { confirm: 2000, info: 2000, alert: 3500, error: 5000 };
+const VISIBLE_MS: Record<NotificationType, number> = { confirm: 2200, info: 2500, alert: 3500, error: 5000 };
 
 export default function Notifications() {
   const dispatch = useAppDispatch();
@@ -33,13 +35,14 @@ export default function Notifications() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  if (!visible || !message) return null;
-
-  const icon = ICONS[type];
   return (
-    <div id="popup-display" role={type === 'error' ? 'alert' : 'status'}>
-      <span className={`popup-display-icon material-symbols-outlined ${icon}-popup`}>{icon}</span>
-      <span className="popup-display-text">{message}</span>
+    <div className={styles.region} role={type === 'error' ? 'alert' : 'status'}>
+      {visible && message && (
+        <div className={styles.toast} data-type={type}>
+          <Icon name={ICONS[type]} filled size={20} className={styles.icon} />
+          <span>{message}</span>
+        </div>
+      )}
     </div>
   );
 }

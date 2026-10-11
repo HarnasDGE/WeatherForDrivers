@@ -44,6 +44,18 @@ export function requireSecret(name: SecretName): string {
   return value;
 }
 
+/**
+ * Demo data instead of the keyed upstream APIs (TomTom, OpenWeatherMap).
+ * MOCK_API=true forces it, MOCK_API=false disables it; otherwise it is on while
+ * either key is missing. Open-Meteo (geocoding, forecast) needs no key and stays live.
+ */
+export function isMockMode(): boolean {
+  const flag = (import.meta.env.MOCK_API || process.env.MOCK_API)?.trim().toLowerCase();
+  if (flag === 'true') return true;
+  if (flag === 'false') return false;
+  return !readEnv('TOMTOM_API_KEY') || !readEnv('OPENWEATHER_API_KEY');
+}
+
 export const API_BASE = {
   openWeather: 'https://api.openweathermap.org',
   openWeatherTiles: 'https://tile.openweathermap.org',

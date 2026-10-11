@@ -1,6 +1,8 @@
 import type { LatLon, RouteWeatherRequest } from '@/lib/shared/types';
 import { handle, isValidLatLon, methodNotAllowed, jsonData, parseNumberInRange } from '@/lib/server/api';
+import { isMockMode } from '@/lib/server/config';
 import { badRequest } from '@/lib/server/errors';
+import { mockWeatherAlongRoutes } from '@/lib/server/mock/route-weather';
 import { getWeatherAlongRoutes } from '@/lib/server/services/route-weather';
 
 const MAX_ROUTES = 3;
@@ -11,7 +13,7 @@ const CONTROL_POINTS_MAX = 20;
 /**
  * POST /api/route-weather
  * body: RouteWeatherRequest { routes: { points: LatLon[] }[], controlPoints }
- * -> { data: RouteWeather[] } (one entry per route, request order)
+ * -> { data: RouteWeather[] } (one entry per route, request order; demo data in mock mode)
  */
 export const POST = handle(async ({ request }) => {
   let body: unknown;
@@ -21,6 +23,7 @@ export const POST = handle(async ({ request }) => {
     throw badRequest('Request body must be valid JSON.');
   }
   const { routes, controlPoints } = parseBody(body);
+  if (isMockMode()) return jsonData(mockWeatherAlongRoutes(routes, controlPoints));
   return jsonData(await getWeatherAlongRoutes(routes, controlPoints));
 });
 

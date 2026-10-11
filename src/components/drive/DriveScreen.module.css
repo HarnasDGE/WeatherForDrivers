@@ -1,0 +1,70 @@
+.drive {
+  position: absolute;
+  inset: 0;
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.top {
+  position: absolute;
+  z-index: 5;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 12px;
+  right: 12px;
+}
+
+.problem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-top: 4px;
+  font-weight: 600;
+}
+
+.retry {
+  height: 44px;
+  padding: 0 18px;
+  border: 1.5px solid var(--asphalt);
+  border-radius: var(--radius-field);
+  background: none;
+  font-weight: 800;
+}
+
+/* Desktop: trip bar + sheet content become a side panel next to the map. */
+@media (min-width: 900px) {
+  .drive {
+    display: grid;
+    grid-template-columns: var(--panel-width) 1fr;
+    grid-template-rows: auto 1fr;
+    background: var(--surface);
+  }
+
+  .map {
+    position: relative;
+    grid-column: 2;
+    grid-row: 1 / -1;
+  }
+
+  .top {
+    position: static;
+    grid-column: 1;
+    grid-row: 1;
+    padding: 24px 24px 8px;
+  }
+
+  .top > * {
+    box-shadow: none;
+    background: var(--verge);
+  }
+
+  .drive > section {
+    grid-column: 1;
+    grid-row: 2;
+    overflow-y: auto;
+  }
+}

@@ -34,13 +34,16 @@ export interface RouteState {
   favoriteRoutes: FavoriteRoute[];
 }
 
+const isSameTrip = (f: FavoriteRoute, data: RouteData) =>
+  f.from.name === data.from.name && f.to.name === data.to.name && f.routeType === data.routeType;
+
 export const MIN_CONTROL_POINTS = 3;
 export const MAX_CONTROL_POINTS = 20;
 
 const initialState: RouteState = {
   query: { from: '', to: '' },
   routeType: 'fastest',
-  controlPoints: 5,
+  controlPoints: 7,
   routeData: null,
   routeWeather: [],
   routeStatus: 'idle',
@@ -111,10 +114,7 @@ const routeSlice = createSlice({
     addFavoriteRoute(state) {
       const data = state.routeData;
       if (!data || data.routes.length === 0) return;
-      const exists = state.favoriteRoutes.some(
-        (f) => f.from.name === data.from.name && f.to.name === data.to.name && f.routeType === data.routeType,
-      );
-      if (exists) return;
+      if (state.favoriteRoutes.some((f) => isSameTrip(f, data))) return;
       state.favoriteRoutes.push({
         from: data.from,
         to: data.to,
@@ -145,6 +145,11 @@ const routeSlice = createSlice({
     selectRouteWeatherStatus: (state) => state.weatherStatus,
     selectRouteError: (state) => state.error,
     selectFavoriteRoutes: (state) => state.favoriteRoutes,
+    /** Index of the current route in favourites, -1 when not saved (or no route). */
+    selectCurrentRouteFavoriteIndex: (state) => {
+      const data = state.routeData;
+      return data ? state.favoriteRoutes.findIndex((f) => isSameTrip(f, data)) : -1;
+    },
   },
 });
 
@@ -174,6 +179,7 @@ export const {
   selectRouteWeatherStatus,
   selectRouteError,
   selectFavoriteRoutes,
+  selectCurrentRouteFavoriteIndex,
 } = routeSlice.selectors;
 
 export default routeSlice.reducer;

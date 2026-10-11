@@ -11,7 +11,7 @@ const SERVICE = 'Open-Meteo';
 
 /* ------------------------------ forecast ------------------------------ */
 
-// Same variables as legacy `fetchDataPlace` (_legacy/src/actions/actionsWeather.js).
+// Legacy `fetchDataPlace` variables plus driving-relevant gusts, visibility and day/night.
 const HOURLY_VARS = {
   temperature2m: 'temperature_2m',
   precipitationProbability: 'precipitation_probability',
@@ -21,6 +21,9 @@ const HOURLY_VARS = {
   snowfall: 'snowfall',
   weatherCode: 'weather_code',
   cloudCover: 'cloud_cover',
+  windGusts10m: 'wind_gusts_10m',
+  visibility: 'visibility',
+  isDay: 'is_day',
 } as const satisfies Record<Exclude<keyof HourlyForecast, 'time'>, string>;
 
 const DAILY_VARS = {
