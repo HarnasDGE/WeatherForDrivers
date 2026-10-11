@@ -74,6 +74,7 @@ export const API_BASE = {
   photon: 'https://photon.komoot.io',
   unsplash: 'https://api.unsplash.com',
   tomTom: 'https://api.tomtom.com',
+  rainViewer: 'https://api.rainviewer.com',
 } as const;
 
 /** Default timeout for upstream requests, ms. */

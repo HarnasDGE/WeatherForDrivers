@@ -1,5 +1,5 @@
 Pogoda dla kierowców, mobile first:
-- **Drive**: trasa z wariantami, pogoda w punktach kontrolnych liczona na czas dojazdu, ocena warunków, dzień/noc, godzina wyjazdu.
+- **Drive**: trasa z wariantami, pogoda w punktach kontrolnych liczona na czas dojazdu, ocena warunków, dzień/noc, godzina wyjazdu. Mapa i oś czasu są powiązane (dotknięcie punktu kontrolnego na liście lub znaku na mapie pokazuje go w drugim miejscu), a przełącznik „Radar” nakłada na mapę radar opadów (RainViewer, bez klucza, także w trybie demo; wymagane uznanie źródła jest na mapie).
 - **When**: ta sama trasa sprawdzona dla każdego wyjazdu w najbliższych 24 h, z rekomendacją najlepszej godziny.
 - **Sun & wind**: odcinki z nisko stojącym słońcem w oczy i z silnym bocznym wiatrem.
 - **Forecast**: prognoza dla miejscowości (teraz, 24 h, 5 dni) z animowanym tłem pogody.

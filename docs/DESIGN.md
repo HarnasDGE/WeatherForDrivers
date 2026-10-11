@@ -48,6 +48,15 @@ Drive, When, Sun & wind, Forecast, plus the theme switch: five items in the bott
 
 Empty planner field shows a Recent list (history icon, same rows as place suggestions, plain Clear text button). The trip header has a share icon next to save and refresh; without Web Share it copies the link and says "Link copied".
 
+## Map and timeline linked
+
+- Tapping a checkpoint row (the whole row is a button) pans and zooms the map so the checkpoint sits in the free area between the trip bar and the sheet, and gives its sign an accent ring and a larger plate, even when zoom-based culling would hide it. A full sheet drops to half so the map is visible.
+- Tapping a sign on the map (signs are focusable buttons) opens a peeking sheet to half, scrolls the timeline to that row and flashes it; the row stays outlined in the accent colour while it is focused. Tapping the map, another route or a new route clears the focus. Reduced motion: no smooth scroll, no pan animation, no flash.
+
+## Rain radar
+
+A white pill with the `radar` icon, labelled "Radar", floats under the trip bar on phones (right-aligned, clear of the sheet) and in the top-right corner of the map on desktop. Off by default; the choice is remembered. When on, it turns accent blue and reads "Radar 14:20" (frame time); the icon pulses while the first frame loads, and a failed load shows a notification. The tiles sit at 65% opacity above the basemap and below the routes, signs and place names; the credit "Weather data by RainViewer" is part of the map's attribution line.
+
 ## Day and night
 
 Driving in the dark is marked the same way everywhere:

@@ -182,6 +182,16 @@ Leaflet: `L.tileLayer('/api/tiles/' + layer + '/{z}/{x}/{y}.png')`. Replaces leg
 API key in the browser. The OpenStreetMap base layer is public and may be loaded directly.
 Needs `OPENWEATHER_API_KEY`.
 
+## GET `/api/radar` – latest rain radar frame (RainViewer, no key)
+
+Returns `{ data: { tileUrl, time, maxZoom, attribution } }` (`RadarFrame`): `tileUrl` is a Leaflet template
+(`https://tilecache.rainviewer.com/v2/radar/<id>/256/{z}/{x}/{y}/2/1_0.png`, colour scheme 2, smoothed),
+`time` the frame time (ISO, new frames every ~10 minutes), `maxZoom` 7 (the map scales the tiles up beyond it)
+and `attribution` the credit RainViewer requires (HTML, shown in the map's attribution). Cached 5 minutes
+(in memory and `Cache-Control`). Works in mock mode as well. Tiles are loaded straight from RainViewer by Leaflet.
+Upstream: `https://api.rainviewer.com/public/weather-maps.json` (free for personal / small-scale use, credit
+required, no SLA; the nowcast and satellite lists are empty now, only the 2 h of past radar frames remain).
+
 ## POST `/api/departure-windows` – weather along a route for many departures
 
 Body (`DepartureWindowsRequest`):

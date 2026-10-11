@@ -33,6 +33,18 @@ export interface ApiErrorResponse {
 
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
+/** GET /api/radar - latest rain radar frame (tiles are loaded straight from `tileUrl` by the map). */
+export interface RadarFrame {
+  /** Leaflet tile template ({z}/{x}/{y}). */
+  tileUrl: string;
+  /** When the frame was generated (ISO). */
+  time: string;
+  /** Highest zoom the tiles exist for; the map scales them up beyond it. */
+  maxZoom: number;
+  /** Required credit line (HTML). */
+  attribution: string;
+}
+
 /* ------------------------------------------------------------------ */
 /* Places                                                              */
 /* ------------------------------------------------------------------ */
