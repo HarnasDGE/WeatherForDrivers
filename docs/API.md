@@ -68,7 +68,7 @@ Same variables as legacy `fetchDataPlace`. Differences: times are **local wall-c
 (legacy: ISO with fake `Z`), missing values are `null` (legacy: `"?"`), `sunrise`/`sunset` are real values.
 Place metadata (`name`, `countryCode`) is **not** included – take it from `/api/geocode`.
 
-## GET `/api/geocode` – place search (Open-Meteo Geocoding, no key)
+## GET `/api/geocode` – place search (Photon, Open-Meteo fallback; no key)
 
 | param   | required | notes                                    |
 | ------- | -------- | ---------------------------------------- |
@@ -77,6 +77,22 @@ Place metadata (`name`, `countryCode`) is **not** included – take it from `/ap
 
 `200 { data: Place[] }` – `{ name, lat, lon, countryCode /* "PL" */, country, admin1 }`. Empty array when nothing found
 (not 404). Legacy search took the first result (`limit=1`).
+
+Source: [Photon](https://photon.komoot.io) (OpenStreetMap, typo/prefix tolerant, local names such as "Warszawa"),
+biased towards Poland but not limited to it, and filtered to towns, villages and districts (no streets/POIs). On a
+Photon error, timeout or zero results the server falls back to Open-Meteo Geocoding with `language=pl`. Both go
+through `src/lib/server/services/geocoding.ts`, which `/api/route` uses as well to resolve names.
+
+## GET `/api/reverse-geocode` – name for coordinates (Photon, no key)
+
+| param | required | notes        |
+| ----- | -------- | ------------ |
+| `lat` | yes      | -90..90      |
+| `lon` | yes      | -180..180    |
+
+`200 { data: Place }` – the nearest town/district (within ~30 km) with the given `lat`/`lon` kept as is. When nothing
+is found or Photon fails the place is named `"Your location"` (never an error because of the name). Used by the
+"Use my location" buttons.
 
 ## GET `/api/place-image` – photo of a place (Unsplash)
 
@@ -186,5 +202,5 @@ One Open-Meteo request; no TomTom calls.
 otherwise it is on while `TOMTOM_API_KEY` or `OPENWEATHER_API_KEY` is missing.
 
 In mock mode `/api/route`, `/api/route-weather` and `/api/departure-windows` return deterministic demo data (`src/lib/server/mock/`)
-with the same shapes as above. `/api/geocode` and `/api/forecast` (Open-Meteo, no key) always stay live.
+with the same shapes as above. `/api/geocode`, `/api/reverse-geocode` (Photon / Open-Meteo, no key) and `/api/forecast` always stay live.
 The page shows a "Demo data" badge while mock mode is on.

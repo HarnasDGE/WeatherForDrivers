@@ -166,12 +166,12 @@ interface OmGeocodingResponse {
   }>;
 }
 
-/** Place search by name (legacy main search used Open-Meteo geocoding, language=en). */
-export async function searchPlaces(query: string, limit: number): Promise<Place[]> {
+/** Place search by name (Open-Meteo geocoding; `language` picks the names, "pl" also matches Polish spellings). */
+export async function searchPlaces(query: string, limit: number, language = 'en'): Promise<Place[]> {
   const url = new URL('/v1/search', API_BASE.openMeteoGeocoding);
   url.searchParams.set('name', query);
   url.searchParams.set('count', String(limit));
-  url.searchParams.set('language', 'en');
+  url.searchParams.set('language', language);
   url.searchParams.set('format', 'json');
 
   const res = await fetchJson<OmGeocodingResponse>(url, { service: 'Open-Meteo Geocoding', retries: 1 });

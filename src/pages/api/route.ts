@@ -3,7 +3,7 @@ import { handle, jsonData, methodNotAllowed, optionalDeparture, parseNumberInRan
 import { isMockMode, requireSecret } from '@/lib/server/config';
 import { badRequest, notFound } from '@/lib/server/errors';
 import { mockRoutes } from '@/lib/server/mock/routes';
-import { searchPlaces } from '@/lib/server/services/openmeteo';
+import { searchPlaces } from '@/lib/server/services/geocoding';
 import { calculateRoutes } from '@/lib/server/services/tomtom';
 
 /**

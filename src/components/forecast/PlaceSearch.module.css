@@ -50,3 +50,22 @@
   background: var(--surface);
   box-shadow: var(--shadow-lg);
 }
+
+.locate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  margin-top: 8px;
+  padding: 0 14px 0 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.locate:disabled {
+  opacity: 0.6;
+}

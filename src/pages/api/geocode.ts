@@ -1,5 +1,5 @@
 import { handle, methodNotAllowed, jsonData, optionalInt, requiredString } from '@/lib/server/api';
-import { searchPlaces } from '@/lib/server/services/openmeteo';
+import { searchPlaces } from '@/lib/server/services/geocoding';
 
 /** GET /api/geocode?q[&limit=5] -> { data: Place[] } (empty array when nothing matches) */
 export const GET = handle(async ({ url }) => {

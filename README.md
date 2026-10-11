@@ -23,7 +23,7 @@ Zmienne środowiskowe (`.env`, tylko po stronie serwera):
 | `UNSPLASH_ACCESS_KEY` | unsplash.com/developers |
 | `TOMTOM_API_KEY` | developer.tomtom.com |
 
-Open-Meteo nie wymaga klucza. TomTom: jedno sprawdzenie trasy = 1 zapytanie (czasy dojazdu do punktów liczone z odpowiedzi trasy); darmowy plan to 20 000 zapytań o trasę miesięcznie.
+Open-Meteo nie wymaga klucza. Wyszukiwanie miejsc i „Use my location” korzystają z Photon (photon.komoot.io, OpenStreetMap, też bez klucza; publiczna instancja, więc z nagłówkiem `User-Agent`), a gdy Photon zawiedzie, z geokodowania Open-Meteo (`language=pl`). TomTom: jedno sprawdzenie trasy = 1 zapytanie (czasy dojazdu do punktów liczone z odpowiedzi trasy); darmowy plan to 20 000 zapytań o trasę miesięcznie.
 
 Tryb demo: bez `TOMTOM_API_KEY` / `OPENWEATHER_API_KEY` (albo z `MOCK_API=true`) trasy i pogoda na trasie to dane przykładowe z `src/lib/server/mock/`. W UI widać wtedy znacznik „Demo data”. Wyszukiwarka miejsc i prognoza (Open-Meteo) zawsze działają na żywo. Szczegóły: `docs/API.md`.
 
