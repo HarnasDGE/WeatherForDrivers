@@ -16,6 +16,8 @@ import DailyList from './DailyList';
 import HourlyStrip from './HourlyStrip';
 import PlaceSearch from './PlaceSearch';
 import { hourSlot, currentHourIndex, nextHours } from './forecastData';
+import { skyFor } from './sky';
+import WeatherBackdrop from './WeatherBackdrop';
 import styles from './ForecastScreen.module.css';
 
 const placeDetails = (place: Place) => [place.admin1, place.country].filter(Boolean).join(', ');
@@ -29,6 +31,9 @@ export default function ForecastScreen() {
   const saved = useAppSelector(selectSavedPlaces);
   const isSaved = useAppSelector(selectIsPlaceSaved);
 
+  const now = forecast ? hourSlot(forecast, currentHourIndex(forecast)) : null;
+  const sky = skyFor(now?.weatherCode ?? null, now?.isDay ?? null, now?.windGusts ?? null);
+
   // The stored forecast may be hours old - refresh it when the tab opens.
   useEffect(() => {
     if (place) void dispatch(loadPlace(place));
@@ -37,6 +42,7 @@ export default function ForecastScreen() {
 
   return (
     <div className={styles.screen}>
+      <WeatherBackdrop sky={sky} />
       {/* Fixed header: the search never scrolls away; only the forecast below scrolls. */}
       <div className={styles.top}>
         <div className={styles.topInner}>
@@ -82,7 +88,7 @@ export default function ForecastScreen() {
                   <Icon name="bookmark" filled={isSaved} />
                 </button>
               </header>
-              <CurrentConditions slot={hourSlot(forecast, currentHourIndex(forecast))} />
+              {now && <CurrentConditions slot={now} />}
               <HourlyStrip slots={nextHours(forecast, 24)} />
               <DailyList daily={forecast.daily} />
               <p className={styles.source}>

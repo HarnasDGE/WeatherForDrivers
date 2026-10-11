@@ -1,0 +1,84 @@
+/* Sky gradients by condition and time of day; the canvas adds motion on top. */
+.backdrop {
+  --sky-top: #d8e8fb;
+  --sky-bottom: var(--surface);
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom) 70%);
+  transition: background 600ms;
+}
+
+.backdrop[data-sky='clear'] {
+  --sky-top: #cfe5ff;
+}
+
+/* A soft sun in the corner on clear days. */
+.backdrop[data-sky='clear'][data-night='false']::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -100px;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 102, 0.55), rgba(255, 214, 102, 0) 65%);
+}
+
+.backdrop[data-sky='clouds'] {
+  --sky-top: #dfe5ec;
+}
+.backdrop[data-sky='fog'] {
+  --sky-top: #e6e8eb;
+}
+.backdrop[data-sky='rain'] {
+  --sky-top: #cdd7e4;
+}
+.backdrop[data-sky='snow'] {
+  --sky-top: #e3ebf5;
+}
+.backdrop[data-sky='storm'] {
+  --sky-top: #c3c8d4;
+}
+.backdrop[data-night='true'] {
+  --sky-top: #cfd3ee;
+}
+
+:global([data-theme='dark']) .backdrop {
+  --sky-top: #1f2d44;
+}
+:global([data-theme='dark']) .backdrop[data-sky='clouds'],
+:global([data-theme='dark']) .backdrop[data-sky='fog'] {
+  --sky-top: #262d37;
+}
+:global([data-theme='dark']) .backdrop[data-sky='rain'] {
+  --sky-top: #1c2740;
+}
+:global([data-theme='dark']) .backdrop[data-sky='snow'] {
+  --sky-top: #2a3446;
+}
+:global([data-theme='dark']) .backdrop[data-sky='storm'] {
+  --sky-top: #231f3a;
+}
+:global([data-theme='dark']) .backdrop[data-night='true'] {
+  --sky-top: #121735;
+}
+:global([data-theme='dark']) .backdrop[data-sky='clear'][data-night='false']::before {
+  background: radial-gradient(circle, rgba(255, 200, 80, 0.25), rgba(255, 200, 80, 0) 65%);
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.85);
+  opacity: 0;
+}

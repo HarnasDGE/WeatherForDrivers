@@ -80,6 +80,7 @@ Mobile (default)                 >= 900px
 ## Motion
 
 - Only one moment runs without user input: while a route is loading, the centre line of the road strip scrolls, as if driving. It is disabled when `prefers-reduced-motion` is set.
+- The Forecast screen has a live sky behind its content (`WeatherBackdrop`, canvas): rain or snow falling with the wind, drifting clouds or fog, lightning in storms, stars at night, a soft sun on clear days. It follows the current hour, pauses while the tab is hidden, and is a still frame with reduced motion.
 - The sheet snaps between peek, half and full. Everything else is instant.
 - The document never scrolls (the body is fixed). Only inner panels scroll, so mobile browsers cannot slide the trip bar, the search or the bottom nav away.
 
