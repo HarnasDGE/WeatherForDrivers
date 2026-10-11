@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { SubmitEvent } from 'react';
 import Icon from '@/components/ui/Icon';
 import PlaceSuggestionList from '@/components/ui/PlaceSuggestionList';
+import { useCurrentPlace } from '@/hooks/useCurrentPlace';
 import { usePlaceSuggestions } from '@/hooks/usePlaceSuggestions';
 import type { PlaceInput } from '@/lib/client/api';
 import { ROUTE_TYPES } from '@/lib/shared/types';
@@ -72,6 +73,7 @@ export default function TripPlanner({ onClose, onSubmit, onPickSaved }: TripPlan
     place: routeData?.to.name === query.to ? routeData.to : null,
   }));
   const [active, setActive] = useState<'from' | 'to' | null>(null);
+  const here = useCurrentPlace();
   const fromRef = useRef<HTMLInputElement>(null);
   const toRef = useRef<HTMLInputElement>(null);
 
@@ -97,6 +99,13 @@ export default function TripPlanner({ onClose, onSubmit, onPickSaved }: TripPlan
       setActive(null);
       toRef.current?.blur();
     }
+  };
+
+  const locateMe = async () => {
+    const place = await here.locate();
+    if (!place) return;
+    setFrom({ text: place.name, place });
+    toRef.current?.focus();
   };
 
   const swap = () => {
@@ -135,6 +144,19 @@ export default function TripPlanner({ onClose, onSubmit, onPickSaved }: TripPlan
                 onFocus={() => setActive('from')}
                 onChange={(e) => setFrom({ text: e.target.value, place: null })}
               />
+              {here.supported && (
+                <button
+                  type="button"
+                  className={styles.locate}
+                  onClick={locateMe}
+                  disabled={here.locating}
+                  aria-busy={here.locating}
+                  aria-label="Use my location"
+                  title="Use my location"
+                >
+                  <Icon name="my_location" />
+                </button>
+              )}
             </label>
             <label className={styles.field} data-kind="finish">
               <span className="visually-hidden">Destination</span>

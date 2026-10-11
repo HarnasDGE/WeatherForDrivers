@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 import Icon from '@/components/ui/Icon';
 import PlaceSuggestionList from '@/components/ui/PlaceSuggestionList';
+import { useCurrentPlace } from '@/hooks/useCurrentPlace';
 import { usePlaceSuggestions } from '@/hooks/usePlaceSuggestions';
 import type { Place } from '@/lib/shared/types';
 import styles from './PlaceSearch.module.css';
@@ -16,11 +17,17 @@ export default function PlaceSearch({ onPick, onSubmitText }: PlaceSearchProps) 
   const [text, setText] = useState('');
   const [focused, setFocused] = useState(false);
   const { places } = usePlaceSuggestions(text);
+  const here = useCurrentPlace();
 
   const pick = (place: Place) => {
     setText('');
     (document.activeElement as HTMLElement | null)?.blur();
     onPick(place);
+  };
+
+  const locateMe = async () => {
+    const place = await here.locate();
+    if (place) pick(place);
   };
 
   const submit = (event: SubmitEvent<HTMLFormElement>) => {
@@ -48,6 +55,12 @@ export default function PlaceSearch({ onPick, onSubmitText }: PlaceSearchProps) 
           onBlur={() => setFocused(false)}
         />
       </label>
+      {here.supported && (
+        <button type="button" className={styles.locate} onClick={locateMe} disabled={here.locating}>
+          <Icon name="my_location" />
+          {here.locating ? 'Locating...' : 'Use my location'}
+        </button>
+      )}
       {focused && places.length > 0 && (
         <div className={styles.dropdown}>
           <PlaceSuggestionList id="forecast-suggestions" places={places} onPick={pick} />

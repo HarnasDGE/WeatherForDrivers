@@ -64,6 +64,11 @@ export function fetchPlaces(query: string, limit?: number): Promise<Place[]> {
   return request(`/api/geocode?${qs({ q: query, limit })}`);
 }
 
+/** Names a spot ("Your location" when it has none); never fails because of the name. */
+export function fetchReversePlace({ lat, lon }: LatLon): Promise<Place> {
+  return request(`/api/reverse-geocode?${qs({ lat, lon })}`);
+}
+
 /** A typed place name (geocoded on the server) or a place picked from suggestions (coordinates are sent along). */
 export type PlaceInput = string | Place;
 

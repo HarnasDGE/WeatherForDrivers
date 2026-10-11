@@ -117,6 +117,46 @@
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
+/* "Use my location" sits inside the start field. */
+.field[data-kind='start'] input {
+  padding-right: 48px;
+}
+
+.locate {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--accent);
+}
+
+.locate:hover {
+  background: var(--verge);
+}
+
+.locate[aria-busy='true'] {
+  animation: locating 1s ease-in-out infinite;
+}
+
+@keyframes locating {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .locate[aria-busy='true'] {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
 .scroll {
   flex: 1;
   min-height: 0;

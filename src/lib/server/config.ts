@@ -71,6 +71,7 @@ export const API_BASE = {
   openWeatherTiles: 'https://tile.openweathermap.org',
   openMeteo: 'https://api.open-meteo.com',
   openMeteoGeocoding: 'https://geocoding-api.open-meteo.com',
+  photon: 'https://photon.komoot.io',
   unsplash: 'https://api.unsplash.com',
   tomTom: 'https://api.tomtom.com',
 } as const;

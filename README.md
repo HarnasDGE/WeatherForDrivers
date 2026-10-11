@@ -24,7 +24,7 @@ Zmienne środowiskowe (`.env`, tylko po stronie serwera):
 | `TOMTOM_API_KEY` | developer.tomtom.com |
 | `TOMTOM_DAILY_BUDGET` | opcjonalnie: globalny dzienny limit zapytań do TomTom (domyślnie 600 = 20 000 / 30) |
 
-Open-Meteo nie wymaga klucza. TomTom: jedno sprawdzenie trasy = 1 zapytanie (czasy dojazdu do punktów liczone z odpowiedzi trasy); darmowy plan to 20 000 zapytań o trasę miesięcznie.
+Open-Meteo nie wymaga klucza. Wyszukiwanie miejsc i „Use my location” korzystają z Photon (photon.komoot.io, OpenStreetMap, też bez klucza; publiczna instancja, więc z nagłówkiem `User-Agent`), a gdy Photon zawiedzie, z geokodowania Open-Meteo (`language=pl`). TomTom: jedno sprawdzenie trasy = 1 zapytanie (czasy dojazdu do punktów liczone z odpowiedzi trasy); darmowy plan to 20 000 zapytań o trasę miesięcznie.
 
 Ochrona limitów: odpowiedzi zewnętrznych API są cache'owane w pamięci (prognoza 10 min, geokodowanie 24 h, trasy 2 min), endpointy GET mają `Cache-Control` z `s-maxage` (CDN Vercel), a middleware (`src/middleware.ts`) ogranicza ruch na IP (np. `/api/route`: 15/min i 150/dzień; HTTP 429 `RATE_LIMITED` z `Retry-After`). Uwaga: stan jest w pamięci procesu, więc na Vercel (wiele instancji, restarty) to ochrona „best effort"; docelowo można przenieść liczniki i cache do Upstash Redis / Vercel KV. Szczegóły: `docs/API.md`.
 
