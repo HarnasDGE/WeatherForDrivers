@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { Place, RouteData, RouteSummary, RouteType, RouteWeather } from '@/lib/shared/types';
+import type { Place, RouteData, RouteSummary, RouteType, RouteWarning, RouteWeather } from '@/lib/shared/types';
 import { hydrate } from '../hydrate';
 import type { LoadStatus } from './weatherSlice';
 
@@ -33,6 +33,10 @@ export interface RouteState {
   routeStatus: LoadStatus;
   weatherStatus: LoadStatus;
   error: string | null;
+  /** Official IMGW warnings along the main route (stretches refer to its distances). */
+  warnings: RouteWarning[];
+  /** Which main route + weather the warnings belong to (see `warningsKey`), null when none loaded. */
+  warningsFor: string | null;
   favoriteRoutes: FavoriteRoute[];
 }
 
@@ -52,6 +56,8 @@ const initialState: RouteState = {
   routeStatus: 'idle',
   weatherStatus: 'idle',
   error: null,
+  warnings: [],
+  warningsFor: null,
   favoriteRoutes: [],
 };
 
@@ -74,10 +80,14 @@ const routeSlice = createSlice({
       state.weatherStatus = 'idle';
       state.error = null;
       state.routeWeather = [];
+      state.warnings = [];
+      state.warningsFor = null;
     },
     routeLoaded(state, action: PayloadAction<RouteData>) {
       state.routeData = action.payload;
       state.routeWeather = [];
+      state.warnings = [];
+      state.warningsFor = null;
       state.routeStatus = 'succeeded';
     },
     routeFailed(state, action: PayloadAction<string>) {
@@ -96,12 +106,19 @@ const routeSlice = createSlice({
       state.weatherStatus = 'failed';
       state.error = action.payload;
     },
+    /** Warnings for the main route identified by `key` (results for a replaced route are dropped by the thunk). */
+    routeWarningsLoaded(state, action: PayloadAction<{ key: string; warnings: RouteWarning[] }>) {
+      state.warnings = action.payload.warnings;
+      state.warningsFor = action.payload.key;
+    },
     /** Makes routes[index] the main route (moved to the front); routeWeather is reordered identically. */
     changeMainRoute(state, action: PayloadAction<number>) {
       const index = action.payload;
       const routes = state.routeData?.routes;
       if (!routes || index <= 0 || index >= routes.length) return;
       routes.unshift(...routes.splice(index, 1));
+      state.warnings = [];
+      state.warningsFor = null;
       if (state.routeWeather.length === routes.length) {
         state.routeWeather.unshift(...state.routeWeather.splice(index, 1));
         state.routeWeather.forEach((w, i) => {
@@ -115,6 +132,8 @@ const routeSlice = createSlice({
       state.routeStatus = 'idle';
       state.weatherStatus = 'idle';
       state.error = null;
+      state.warnings = [];
+      state.warningsFor = null;
     },
     /** Saves the current route (no-op when absent or already saved: same from, to and routeType). */
     addFavoriteRoute(state) {
@@ -151,6 +170,7 @@ const routeSlice = createSlice({
     selectRouteStatus: (state) => state.routeStatus,
     selectRouteWeatherStatus: (state) => state.weatherStatus,
     selectRouteError: (state) => state.error,
+    selectRouteWarnings: (state) => state.warnings,
     selectFavoriteRoutes: (state) => state.favoriteRoutes,
     /** Index of the current route in favourites, -1 when not saved (or no route). */
     selectCurrentRouteFavoriteIndex: (state) => {
@@ -170,6 +190,7 @@ export const {
   routeWeatherRequested,
   routeWeatherLoaded,
   routeWeatherFailed,
+  routeWarningsLoaded,
   changeMainRoute,
   clearRoute,
   addFavoriteRoute,
@@ -187,6 +208,7 @@ export const {
   selectRouteStatus,
   selectRouteWeatherStatus,
   selectRouteError,
+  selectRouteWarnings,
   selectFavoriteRoutes,
   selectCurrentRouteFavoriteIndex,
 } = routeSlice.selectors;

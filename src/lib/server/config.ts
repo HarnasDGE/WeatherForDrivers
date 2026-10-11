@@ -63,6 +63,7 @@ export const API_BASE = {
   openMeteoGeocoding: 'https://geocoding-api.open-meteo.com',
   unsplash: 'https://api.unsplash.com',
   tomTom: 'https://api.tomtom.com',
+  imgw: 'https://danepubliczne.imgw.pl',
 } as const;
 
 /** Default timeout for upstream requests, ms. */

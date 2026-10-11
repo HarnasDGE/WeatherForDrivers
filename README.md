@@ -1,5 +1,5 @@
 Pogoda dla kierowców, mobile first:
-- **Drive**: trasa z wariantami, pogoda w punktach kontrolnych liczona na czas dojazdu, ocena warunków, dzień/noc, godzina wyjazdu.
+- **Drive**: trasa z wariantami, pogoda w punktach kontrolnych liczona na czas dojazdu, ocena warunków, dzień/noc, godzina wyjazdu, oficjalne ostrzeżenia meteorologiczne IMGW-PIB na odcinkach trasy w Polsce (ważne w chwili przejazdu).
 - **When**: ta sama trasa sprawdzona dla każdego wyjazdu w najbliższych 24 h, z rekomendacją najlepszej godziny.
 - **Sun & wind**: odcinki z nisko stojącym słońcem w oczy i z silnym bocznym wiatrem.
 - **Forecast**: prognoza dla miejscowości (teraz, 24 h, 5 dni) z animowanym tłem pogody.
@@ -23,9 +23,9 @@ Zmienne środowiskowe (`.env`, tylko po stronie serwera):
 | `UNSPLASH_ACCESS_KEY` | unsplash.com/developers |
 | `TOMTOM_API_KEY` | developer.tomtom.com |
 
-Open-Meteo nie wymaga klucza. TomTom: jedno sprawdzenie trasy = 1 zapytanie (czasy dojazdu do punktów liczone z odpowiedzi trasy); darmowy plan to 20 000 zapytań o trasę miesięcznie.
+Open-Meteo i IMGW-PIB (ostrzeżenia) nie wymagają klucza. TomTom: jedno sprawdzenie trasy = 1 zapytanie (czasy dojazdu do punktów liczone z odpowiedzi trasy); darmowy plan to 20 000 zapytań o trasę miesięcznie.
 
-Tryb demo: bez `TOMTOM_API_KEY` / `OPENWEATHER_API_KEY` (albo z `MOCK_API=true`) trasy i pogoda na trasie to dane przykładowe z `src/lib/server/mock/`. W UI widać wtedy znacznik „Demo data”. Wyszukiwarka miejsc i prognoza (Open-Meteo) zawsze działają na żywo. Szczegóły: `docs/API.md`.
+Tryb demo: bez `TOMTOM_API_KEY` / `OPENWEATHER_API_KEY` (albo z `MOCK_API=true`) trasy i pogoda na trasie to dane przykładowe z `src/lib/server/mock/`. W UI widać wtedy znacznik „Demo data”. Wyszukiwarka miejsc, prognoza (Open-Meteo) i ostrzeżenia IMGW zawsze działają na żywo; gdy IMGW nie ma ostrzeżeń dla trasy, tryb demo pokazuje jedno przykładowe (oznaczone jako przykład). Szczegóły: `docs/API.md`.
 
 ## Struktura
 

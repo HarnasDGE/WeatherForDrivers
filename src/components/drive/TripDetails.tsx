@@ -1,4 +1,5 @@
 import Icon from '@/components/ui/Icon';
+import { useRouteWarnings } from '@/hooks/useRouteWarnings';
 import { formatClock, formatDayTime } from '@/lib/shared/format';
 import type { RouteData, RouteWeather } from '@/lib/shared/types';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -14,6 +15,7 @@ import {
 } from '@/store/slices/routeSlice';
 import { fetchRouteWeather, fetchRouteWithWeather } from '@/store/thunks';
 import DaylightBar from './DaylightBar';
+import OfficialWarnings from './OfficialWarnings';
 import RoadTimeline, { RoadTimelineLoading } from './RoadTimeline';
 import RouteOptions from './RouteOptions';
 import { routeOptions, tripVerdict } from './tripSummary';
@@ -32,6 +34,7 @@ export default function TripDetails({ routeData, routeWeather, demo }: TripDetai
   const error = useAppSelector(selectRouteError);
   const savedIndex = useAppSelector(selectCurrentRouteFavoriteIndex);
   const departure = useAppSelector(selectDeparture);
+  const warnings = useRouteWarnings();
   const { departureTime, arrivalTime } = routeData.routes[0].summary;
   const leaving = departure ? `Leave ${formatDayTime(departureTime)}` : 'Leave now';
 
@@ -88,6 +91,8 @@ export default function TripDetails({ routeData, routeWeather, demo }: TripDetai
           {verdict.text}
         </p>
       )}
+
+      {weatherStatus !== 'loading' && <OfficialWarnings warnings={warnings} />}
 
       {weatherStatus !== 'loading' && <DaylightBar points={mainPoints} />}
 

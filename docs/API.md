@@ -1,6 +1,6 @@
 # WeatherApp – server API contract
 
-All external services (OpenWeatherMap, Open-Meteo, Unsplash, TomTom) are called **only on the server**
+All external services (OpenWeatherMap, Open-Meteo, Unsplash, TomTom, IMGW-PIB) are called **only on the server**
 (`src/lib/server/**`). The frontend talks exclusively to the endpoints below (same origin, relative URLs).
 TypeScript types live in [`src/lib/shared/types.ts`](../src/lib/shared/types.ts) – import them with
 `import type { … } from '@/lib/shared/types'`.
@@ -178,6 +178,50 @@ Body (`DepartureWindowsRequest`):
 points index-aligned with `checkpoints`. Driving times are assumed equal for every departure (traffic ignored).
 One Open-Meteo request; no TomTom calls.
 
+## POST `/api/route-warnings` – official IMGW-PIB warnings along a route (Poland, no key)
+
+Body (`RouteWarningsRequest`):
+
+```ts
+{
+  points: Array<{ lat, lon, time, lengthInMeters }> // 1..400, driving order; time = ISO arrival (within 7 days of now)
+}
+```
+
+The client sends the main route's weather checkpoints plus samples every ≥ 4 km of its geometry, timed from the
+route's `timeline` (`warningPoints` in `src/lib/shared/route-warnings.ts`).
+
+`200 { data: RouteWarning[] }` – warnings whose validity overlaps the time the driver is in a warned county,
+ordered by where they start on the road:
+
+```ts
+{ id: string,                          // IMGW id
+  level: 1 | 2 | 3,                    // IMGW "stopień" (yellow / orange / red)
+  event: string,                       // phenomenon as issued, Polish, e.g. "Silny deszcz z burzami"
+  eventLabel: string | null,           // short English label for common phenomena, e.g. "Heavy rain with thunderstorms"
+  probability: number | null,          // %
+  validFrom: string, validTo: string,  // ISO UTC
+  published: string | null,            // ISO UTC
+  office: string | null,               // issuing IMGW office
+  areas: string[],                     // counties on the route covered by it, e.g. ["powiat słupski"]
+  stretches: Array<{ fromIndex, toIndex, fromMeters, toMeters }>, // indexes into `points`, inclusive
+  description: string,                 // warning text (Polish), plus the forecaster's comment if any
+  sample: boolean }                    // true only for the mock-mode demo warning
+```
+
+- **Source:** `GET https://danepubliczne.imgw.pl/api/data/warningsmeteo` (public IMGW-PIB data, no key). Each item
+  lists the counties it covers as 4-digit TERYT codes (`teryt`), with times in Polish local time
+  (`obowiazuje_od` / `obowiazuje_do`, converted to UTC on the server). Fetched once for the whole country and
+  cached in memory for 10 minutes.
+- **Point → county:** point-in-polygon on simplified PRG county boundaries shipped with the server
+  (`src/lib/server/data/powiaty.json`, source and licence in the README there); no per-point calls.
+  Points outside Poland are ignored.
+- **Time match:** each point stands for the time from halfway after the previous point to halfway before the
+  next one; a warning counts when that window overlaps its validity and the point is in one of its counties.
+- **IMGW down:** the endpoint still answers `200 { data: [] }` and logs a warning (failures are retried after 1 min).
+- **Mock mode:** IMGW stays live. When it has no warning for a route that passes through Poland, one deterministic
+  sample warning (`sample: true`, "Strong wind", level 1) covers the stretch between 35% and 60% of the route.
+
 ---
 
 ## Mock mode (demo data)
@@ -186,5 +230,6 @@ One Open-Meteo request; no TomTom calls.
 otherwise it is on while `TOMTOM_API_KEY` or `OPENWEATHER_API_KEY` is missing.
 
 In mock mode `/api/route`, `/api/route-weather` and `/api/departure-windows` return deterministic demo data (`src/lib/server/mock/`)
-with the same shapes as above. `/api/geocode` and `/api/forecast` (Open-Meteo, no key) always stay live.
+with the same shapes as above. `/api/geocode` and `/api/forecast` (Open-Meteo, no key) always stay live, and so does
+`/api/route-warnings` (IMGW, no key), which adds one sample warning when there is no real one.
 The page shows a "Demo data" badge while mock mode is on.

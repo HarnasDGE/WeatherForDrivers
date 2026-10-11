@@ -51,6 +51,13 @@ Driving in the dark is marked the same way everywhere:
 - in the timeline, night rows have an indigo road and a moon by the time. A "Sunset" or "Sunrise" row sits where the light changes, and the band fades between the two colours;
 - under the verdict, a bar shows the daylight vs dark share of the drive, plus one sentence on when it gets dark.
 
+## Official warnings
+
+IMGW-PIB warnings for the stretches of the route in Poland sit under the verdict, only when there are any:
+one row per warning with a small level plate (1 marking yellow, 2 hazard outline, 3 solid hazard, like a road sign),
+the phenomenon, its validity and the affected km, and the source "IMGW-PIB" below. A row opens to the full text.
+In the road timeline, checkpoints inside a warning get a small warning sign and label under the weather.
+
 ## Type
 
 - **Overpass**, a typeface derived from Highway Gothic (US road signs). One family only.

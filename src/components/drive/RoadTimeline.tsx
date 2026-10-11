@@ -3,8 +3,11 @@ import ConditionTag from '@/components/ui/ConditionTag';
 import Icon from '@/components/ui/Icon';
 import { formatClock, formatDistanceKm, formatTemperature } from '@/lib/shared/format';
 import { assessRoad } from '@/lib/shared/road-conditions';
-import type { RouteWeatherPoint } from '@/lib/shared/types';
+import { warningName, warningsAt } from '@/lib/shared/route-warnings';
+import type { RouteWarning, RouteWeatherPoint } from '@/lib/shared/types';
 import { getWeatherDescription, getWeatherSymbol } from '@/lib/shared/weather-icons';
+import { useAppSelector } from '@/store/hooks';
+import { selectRouteWarnings } from '@/store/slices/routeSlice';
 import { checkpointName, lightAt, lightChanges } from './tripSummary';
 import styles from './RoadTimeline.module.css';
 
@@ -23,6 +26,7 @@ const position = (index: number, count: number) => (index === 0 ? 'start' : inde
  */
 export default function RoadTimeline({ points, from, to }: RoadTimelineProps) {
   const changes = new Map(lightChanges(points).map((change) => [change.index, change]));
+  const officialWarnings = useAppSelector(selectRouteWarnings);
   return (
     <ol className={styles.road} aria-label="Weather along the route">
       {points.map((point, index) => {
@@ -72,12 +76,25 @@ export default function RoadTimeline({ points, from, to }: RoadTimelineProps) {
                   {getWeatherDescription(point.weatherCode)}
                   {index > 0 && `, ${formatDistanceKm(point.lengthInMeters)} in`}
                 </p>
+                <OfficialWarningLabel warnings={warningsAt(officialWarnings, point.lengthInMeters)} />
               </div>
             </li>
           </Fragment>
         );
       })}
     </ol>
+  );
+}
+
+/** Official IMGW warning in force where and when the driver passes this checkpoint (most severe first). */
+function OfficialWarningLabel({ warnings }: { warnings: RouteWarning[] }) {
+  if (warnings.length === 0) return null;
+  const sorted = [...warnings].sort((a, b) => b.level - a.level);
+  return (
+    <p className={styles.officialWarning} data-level={sorted[0].level}>
+      <Icon name="warning" size={16} className={styles.warningIcon} />
+      {sorted.map((w) => `${warningName(w)} (level ${w.level})`).join(', ')}
+    </p>
   );
 }
 
