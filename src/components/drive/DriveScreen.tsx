@@ -2,17 +2,25 @@ import { useEffect, useMemo, useState } from 'react';
 import DriveMap from '@/components/map/DriveMap';
 import BottomSheet, { snapHeight } from '@/components/ui/BottomSheet';
 import type { SheetSnap } from '@/components/ui/BottomSheet';
+import RadarToggle from '@/components/map/RadarToggle';
 import { DESKTOP_QUERY, useMediaQuery } from '@/hooks/useMediaQuery';
+import { useRadar } from '@/hooks/useRadar';
 import type { PlaceInput } from '@/lib/client/api';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   changeMainRoute,
+  focusCheckpoint,
+  selectFocusedCheckpoint,
+  selectFocusSeq,
+  selectFocusSource,
   selectRouteData,
   selectRouteError,
   selectRouteStatus,
   selectRouteWeather,
 } from '@/store/slices/routeSlice';
 import type { FavoriteRoute } from '@/store/slices/routeSlice';
+import { showNotification } from '@/store/slices/notificationsSlice';
+import { selectRadar, setRadar } from '@/store/slices/uiSlice';
 import { fetchRouteWithWeather, loadFavoriteRoute } from '@/store/thunks';
 import DriveHome from './DriveHome';
 import { RoadTimelineLoading } from './RoadTimeline';
@@ -31,7 +39,12 @@ export default function DriveScreen({ demo }: { demo: boolean }) {
   const routeWeather = useAppSelector(selectRouteWeather);
   const routeStatus = useAppSelector(selectRouteStatus);
   const error = useAppSelector(selectRouteError);
+  const focusedCheckpoint = useAppSelector(selectFocusedCheckpoint);
+  const focusSeq = useAppSelector(selectFocusSeq);
+  const focusSource = useAppSelector(selectFocusSource);
+  const radarOn = useAppSelector(selectRadar);
   const desktop = useMediaQuery(DESKTOP_QUERY);
+  const radar = useRadar(radarOn);
 
   const [plannerOpen, setPlannerOpen] = useState(false);
   const [snap, setSnap] = useState<SheetSnap>(routeData ? 'half' : 'peek');
@@ -41,11 +54,22 @@ export default function DriveScreen({ demo }: { demo: boolean }) {
     if (routeStatus === 'loading' || routeStatus === 'succeeded') setSnap('half');
   }, [routeStatus]);
 
+  // Let the user know once when the radar cannot be loaded.
+  useEffect(() => {
+    if (radar.status === 'failed') dispatch(showNotification('Rain radar is unavailable right now.', 'error'));
+  }, [radar.status, dispatch]);
+
+  // Focusing a checkpoint keeps the map visible: a full sheet drops to half (list tap), a peeking one opens (map tap).
+  useEffect(() => {
+    if (focusSeq === 0 || desktop) return;
+    setSnap((current) =>
+      focusSource === 'timeline' ? (current === 'full' ? 'half' : current) : current === 'peek' ? 'half' : current,
+    );
+  }, [focusSeq, focusSource, desktop]);
+
   const insets = useMemo(
     () =>
-      desktop
-        ? { top: 0, bottom: 0 }
-        : { top: TRIP_BAR_SPACE, bottom: snapHeight('half', window.innerHeight - 64) },
+      desktop ? { top: 0, bottom: 0 } : { top: TRIP_BAR_SPACE, bottom: snapHeight('half', window.innerHeight - 64) },
     [desktop],
   );
 
@@ -83,6 +107,19 @@ export default function DriveScreen({ demo }: { demo: boolean }) {
           weather={routeWeather}
           insets={insets}
           onSelectRoute={(index) => dispatch(changeMainRoute(index))}
+          radar={radarOn ? radar.frame : null}
+          focusedCheckpoint={focusedCheckpoint}
+          focusSeq={focusSeq}
+          onSelectCheckpoint={(index) => dispatch(focusCheckpoint({ index, source: 'map' }))}
+          onClearFocus={() => dispatch(focusCheckpoint(null))}
+        />
+      </div>
+      <div className={styles.tools}>
+        <RadarToggle
+          on={radarOn}
+          frame={radar.frame}
+          status={radar.status}
+          onToggle={() => dispatch(setRadar(!radarOn))}
         />
       </div>
       <div className={styles.top}>

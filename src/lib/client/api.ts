@@ -5,6 +5,7 @@ import type {
   Forecast,
   LatLon,
   Place,
+  RadarFrame,
   RouteData,
   RouteType,
   RouteWeather,
@@ -93,4 +94,8 @@ export function fetchDepartureWindows(body: DepartureWindowsRequest): Promise<De
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+}
+
+export function fetchRadar(): Promise<RadarFrame> {
+  return request('/api/radar');
 }

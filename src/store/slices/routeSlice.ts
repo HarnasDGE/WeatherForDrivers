@@ -34,6 +34,12 @@ export interface RouteState {
   weatherStatus: LoadStatus;
   error: string | null;
   favoriteRoutes: FavoriteRoute[];
+  /** Checkpoint (index in routeWeather[0].points) the map and the timeline both point at. Not persisted. */
+  focusedCheckpoint: number | null;
+  /** Bumps on every focus request, so tapping the same checkpoint again re-pans the map. */
+  focusSeq: number;
+  /** Where the focus came from: a timeline row pans the map, a map sign scrolls the timeline. */
+  focusSource: 'timeline' | 'map';
 }
 
 const isSameTrip = (f: FavoriteRoute, data: RouteData) =>
@@ -53,6 +59,9 @@ const initialState: RouteState = {
   weatherStatus: 'idle',
   error: null,
   favoriteRoutes: [],
+  focusedCheckpoint: null,
+  focusSeq: 0,
+  focusSource: 'timeline',
 };
 
 const routeSlice = createSlice({
@@ -74,10 +83,12 @@ const routeSlice = createSlice({
       state.weatherStatus = 'idle';
       state.error = null;
       state.routeWeather = [];
+      state.focusedCheckpoint = null;
     },
     routeLoaded(state, action: PayloadAction<RouteData>) {
       state.routeData = action.payload;
       state.routeWeather = [];
+      state.focusedCheckpoint = null;
       state.routeStatus = 'succeeded';
     },
     routeFailed(state, action: PayloadAction<string>) {
@@ -91,6 +102,7 @@ const routeSlice = createSlice({
     routeWeatherLoaded(state, action: PayloadAction<RouteWeather[]>) {
       state.routeWeather = action.payload;
       state.weatherStatus = 'succeeded';
+      state.focusedCheckpoint = null;
     },
     routeWeatherFailed(state, action: PayloadAction<string>) {
       state.weatherStatus = 'failed';
@@ -102,6 +114,7 @@ const routeSlice = createSlice({
       const routes = state.routeData?.routes;
       if (!routes || index <= 0 || index >= routes.length) return;
       routes.unshift(...routes.splice(index, 1));
+      state.focusedCheckpoint = null; // the checkpoints belong to another route now
       if (state.routeWeather.length === routes.length) {
         state.routeWeather.unshift(...state.routeWeather.splice(index, 1));
         state.routeWeather.forEach((w, i) => {
@@ -115,6 +128,17 @@ const routeSlice = createSlice({
       state.routeStatus = 'idle';
       state.weatherStatus = 'idle';
       state.error = null;
+      state.focusedCheckpoint = null;
+    },
+    /** Points the map and the timeline at a checkpoint of the main route; null clears the focus. */
+    focusCheckpoint(state, action: PayloadAction<{ index: number; source: 'timeline' | 'map' } | null>) {
+      if (!action.payload) {
+        state.focusedCheckpoint = null;
+        return;
+      }
+      state.focusedCheckpoint = action.payload.index;
+      state.focusSource = action.payload.source;
+      state.focusSeq += 1;
     },
     /** Saves the current route (no-op when absent or already saved: same from, to and routeType). */
     addFavoriteRoute(state) {
@@ -138,6 +162,7 @@ const routeSlice = createSlice({
     builder.addCase(hydrate, (state, action) => {
       const saved = action.payload.route;
       if (saved) Object.assign(state, saved);
+      state.focusedCheckpoint = null;
     });
   },
   selectors: {
@@ -151,6 +176,9 @@ const routeSlice = createSlice({
     selectRouteStatus: (state) => state.routeStatus,
     selectRouteWeatherStatus: (state) => state.weatherStatus,
     selectRouteError: (state) => state.error,
+    selectFocusedCheckpoint: (state) => state.focusedCheckpoint,
+    selectFocusSeq: (state) => state.focusSeq,
+    selectFocusSource: (state) => state.focusSource,
     selectFavoriteRoutes: (state) => state.favoriteRoutes,
     /** Index of the current route in favourites, -1 when not saved (or no route). */
     selectCurrentRouteFavoriteIndex: (state) => {
@@ -172,6 +200,7 @@ export const {
   routeWeatherFailed,
   changeMainRoute,
   clearRoute,
+  focusCheckpoint,
   addFavoriteRoute,
   removeFavoriteRoute,
 } = routeSlice.actions;
@@ -187,6 +216,9 @@ export const {
   selectRouteStatus,
   selectRouteWeatherStatus,
   selectRouteError,
+  selectFocusedCheckpoint,
+  selectFocusSeq,
+  selectFocusSource,
   selectFavoriteRoutes,
   selectCurrentRouteFavoriteIndex,
 } = routeSlice.selectors;

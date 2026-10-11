@@ -12,9 +12,11 @@ export interface UiState {
   tab: AppTab;
   /** "system" follows prefers-color-scheme. */
   theme: ThemePreference;
+  /** Rain radar overlay on the Drive map. */
+  radar: boolean;
 }
 
-const initialState: UiState = { tab: 'drive', theme: 'system' };
+const initialState: UiState = { tab: 'drive', theme: 'system', radar: false };
 
 const uiSlice = createSlice({
   name: 'ui',
@@ -26,20 +28,25 @@ const uiSlice = createSlice({
     setTheme(state, action: PayloadAction<ThemePreference>) {
       state.theme = action.payload;
     },
+    setRadar(state, action: PayloadAction<boolean>) {
+      state.radar = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(hydrate, (state, action) => {
-      const { tab, theme } = action.payload.ui ?? {};
+      const { tab, theme, radar } = action.payload.ui ?? {};
       if (tab && APP_TABS.includes(tab)) state.tab = tab;
       if (theme && THEME_PREFERENCES.includes(theme)) state.theme = theme;
+      if (typeof radar === 'boolean') state.radar = radar;
     });
   },
   selectors: {
     selectTab: (state) => state.tab,
     selectThemePreference: (state) => state.theme,
+    selectRadar: (state) => state.radar,
   },
 });
 
-export const { setTab, setTheme } = uiSlice.actions;
-export const { selectTab, selectThemePreference } = uiSlice.selectors;
+export const { setTab, setTheme, setRadar } = uiSlice.actions;
+export const { selectTab, selectThemePreference, selectRadar } = uiSlice.selectors;
 export default uiSlice.reducer;

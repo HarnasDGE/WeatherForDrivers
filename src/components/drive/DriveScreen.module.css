@@ -17,6 +17,14 @@
   right: 12px;
 }
 
+/* Map tools float under the trip bar on phones (right-aligned, clear of the sheet) and in the map corner on desktop. */
+.tools {
+  position: absolute;
+  z-index: 5;
+  top: calc(84px + env(safe-area-inset-top));
+  right: 12px;
+}
+
 .problem {
   display: flex;
   flex-direction: column;
@@ -55,6 +63,11 @@
     grid-column: 1;
     grid-row: 1;
     padding: 24px 24px 8px;
+  }
+
+  .tools {
+    top: 16px;
+    right: 16px;
   }
 
   .top > * {
