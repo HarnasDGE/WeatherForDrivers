@@ -3,6 +3,8 @@ Pogoda dla kierowców, mobile first:
 - **When**: ta sama trasa sprawdzona dla każdego wyjazdu w najbliższych 24 h, z rekomendacją najlepszej godziny.
 - **Sun & wind**: odcinki z nisko stojącym słońcem w oczy i z silnym bocznym wiatrem.
 - **Forecast**: prognoza dla miejscowości (teraz, 24 h, 5 dni) z animowanym tłem pogody.
+- **Ostatnie miejsca**: planer pamięta 8 ostatnio wybranych miejsc i podpowiada je przy pustym polu.
+- **Udostępnianie trasy**: przycisk Share w szczegółach trasy daje link (`/?from=..&fromLat=..&fromLon=..&to=..&toLat=..&toLon=..&leave=..&type=..`); otwarcie linku od razu liczy trasę z pogodą.
 
 Stack: Astro (SSR, adapter Node lokalnie, Vercel na Vercelu) + React islands + TypeScript + Redux Toolkit, Leaflet, CSS Modules.
 Design: `docs/DESIGN.md` (skill `frontend-design` w `.claude/skills/`).

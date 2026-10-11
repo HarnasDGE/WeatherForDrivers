@@ -2,6 +2,7 @@ import * as api from '@/lib/client/api';
 import type { PlaceInput } from '@/lib/client/api';
 import { showNotification } from '../slices/notificationsSlice';
 import {
+  addRecentPlace,
   routeFailed,
   routeLoaded,
   routeRequested,
@@ -35,6 +36,7 @@ export const fetchRoute =
     const { routeType, departure } = getState().route;
     const departAt = plannedDeparture(departure);
     if (!departAt && departure) dispatch(setDeparture(null));
+    for (const p of [start, end]) if (typeof p !== 'string') dispatch(addRecentPlace(p));
     dispatch(routeRequested({ from: api.placeName(start), to: api.placeName(end) }));
     try {
       const data = await api.fetchRoute(start, end, routeType, departAt);
@@ -63,7 +65,11 @@ export const fetchRouteWeather = (): AppThunk<boolean> => async (dispatch, getSt
   try {
     // Same departure as the route itself, so arrival times match its summary.
     const departureTime = plannedDeparture(departure) && requested[0]?.summary.departureTime;
-    const result = await api.fetchRouteWeather({ routes: requested, controlPoints, departureTime: departureTime || undefined });
+    const result = await api.fetchRouteWeather({
+      routes: requested,
+      controlPoints,
+      departureTime: departureTime || undefined,
+    });
 
     const current = getState().route.routeData?.routes ?? [];
     const aligned = current.map((route, index) => {
@@ -97,4 +103,3 @@ export const loadFavoriteRoute =
     dispatch(setControlPoints(favorite.controlPoints));
     return dispatch(fetchRouteWithWeather(favorite.from, favorite.to));
   };
-

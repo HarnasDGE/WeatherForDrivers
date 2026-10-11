@@ -1,5 +1,6 @@
 import Icon from '@/components/ui/Icon';
 import { formatClock, formatDayTime } from '@/lib/shared/format';
+import { buildTripLink } from '@/lib/shared/trip-link';
 import type { RouteData, RouteWeather } from '@/lib/shared/types';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { showNotification } from '@/store/slices/notificationsSlice';
@@ -10,6 +11,7 @@ import {
   selectCurrentRouteFavoriteIndex,
   selectDeparture,
   selectRouteError,
+  selectRouteType,
   selectRouteWeatherStatus,
 } from '@/store/slices/routeSlice';
 import { fetchRouteWeather, fetchRouteWithWeather } from '@/store/thunks';
@@ -32,6 +34,7 @@ export default function TripDetails({ routeData, routeWeather, demo }: TripDetai
   const error = useAppSelector(selectRouteError);
   const savedIndex = useAppSelector(selectCurrentRouteFavoriteIndex);
   const departure = useAppSelector(selectDeparture);
+  const routeType = useAppSelector(selectRouteType);
   const { departureTime, arrivalTime } = routeData.routes[0].summary;
   const leaving = departure ? `Leave ${formatDayTime(departureTime)}` : 'Leave now';
 
@@ -46,6 +49,28 @@ export default function TripDetails({ routeData, routeWeather, demo }: TripDetai
     } else {
       dispatch(removeFavoriteRoute(savedIndex));
       dispatch(showNotification('Route removed from saved.', 'info'));
+    }
+  };
+
+  const shareTrip = async () => {
+    const plannedAt = departure && new Date(departure).getTime() > Date.now() ? departure : null;
+    const url = buildTripLink(window.location.origin, {
+      from: routeData.from,
+      to: routeData.to,
+      departure: plannedAt,
+      routeType,
+    });
+    const text = `${routeData.from.name} to ${routeData.to.name}, ${plannedAt ? `leave ${formatDayTime(departureTime)}` : 'leave now'}`;
+    try {
+      if (typeof navigator.share === 'function') {
+        await navigator.share({ title: 'Weather for Drivers', text, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        dispatch(showNotification('Link copied', 'confirm'));
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return; // share sheet dismissed
+      dispatch(showNotification('Could not share the link.', 'error'));
     }
   };
 
@@ -70,6 +95,9 @@ export default function TripDetails({ routeData, routeWeather, demo }: TripDetai
             onClick={toggleSaved}
           >
             <Icon name="bookmark" filled={savedIndex !== -1} />
+          </button>
+          <button type="button" className={styles.action} aria-label="Share route" onClick={() => void shareTrip()}>
+            <Icon name="share" />
           </button>
           <button
             type="button"

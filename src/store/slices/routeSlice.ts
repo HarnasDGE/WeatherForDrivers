@@ -34,6 +34,8 @@ export interface RouteState {
   weatherStatus: LoadStatus;
   error: string | null;
   favoriteRoutes: FavoriteRoute[];
+  /** Places picked or checked recently, most recent first (max MAX_RECENT_PLACES). */
+  recentPlaces: Place[];
 }
 
 const isSameTrip = (f: FavoriteRoute, data: RouteData) =>
@@ -41,6 +43,9 @@ const isSameTrip = (f: FavoriteRoute, data: RouteData) =>
 
 export const MIN_CONTROL_POINTS = 3;
 export const MAX_CONTROL_POINTS = 20;
+export const MAX_RECENT_PLACES = 8;
+
+const isSamePlace = (a: Place, b: Place) => (a.lat === b.lat && a.lon === b.lon) || a.name === b.name;
 
 const initialState: RouteState = {
   query: { from: '', to: '' },
@@ -53,6 +58,7 @@ const initialState: RouteState = {
   weatherStatus: 'idle',
   error: null,
   favoriteRoutes: [],
+  recentPlaces: [],
 };
 
 const routeSlice = createSlice({
@@ -133,6 +139,13 @@ const routeSlice = createSlice({
     removeFavoriteRoute(state, action: PayloadAction<number>) {
       state.favoriteRoutes.splice(action.payload, 1);
     },
+    addRecentPlace(state, action: PayloadAction<Place>) {
+      const rest = state.recentPlaces.filter((p) => !isSamePlace(p, action.payload));
+      state.recentPlaces = [action.payload, ...rest].slice(0, MAX_RECENT_PLACES);
+    },
+    clearRecentPlaces(state) {
+      state.recentPlaces = [];
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(hydrate, (state, action) => {
@@ -152,6 +165,7 @@ const routeSlice = createSlice({
     selectRouteWeatherStatus: (state) => state.weatherStatus,
     selectRouteError: (state) => state.error,
     selectFavoriteRoutes: (state) => state.favoriteRoutes,
+    selectRecentPlaces: (state) => state.recentPlaces,
     /** Index of the current route in favourites, -1 when not saved (or no route). */
     selectCurrentRouteFavoriteIndex: (state) => {
       const data = state.routeData;
@@ -174,6 +188,8 @@ export const {
   clearRoute,
   addFavoriteRoute,
   removeFavoriteRoute,
+  addRecentPlace,
+  clearRecentPlaces,
 } = routeSlice.actions;
 
 export const {
@@ -188,6 +204,7 @@ export const {
   selectRouteWeatherStatus,
   selectRouteError,
   selectFavoriteRoutes,
+  selectRecentPlaces,
   selectCurrentRouteFavoriteIndex,
 } = routeSlice.selectors;
 
