@@ -1,5 +1,5 @@
 import type { LatLon, RouteWeatherRequest } from '@/lib/shared/types';
-import { handle, isValidLatLon, methodNotAllowed, jsonData, parseNumberInRange } from '@/lib/server/api';
+import { handle, isValidLatLon, methodNotAllowed, jsonData, optionalDeparture, parseNumberInRange } from '@/lib/server/api';
 import { isMockMode } from '@/lib/server/config';
 import { badRequest } from '@/lib/server/errors';
 import { mockWeatherAlongRoutes } from '@/lib/server/mock/route-weather';
@@ -12,7 +12,7 @@ const CONTROL_POINTS_MAX = 20;
 
 /**
  * POST /api/route-weather
- * body: RouteWeatherRequest { routes: { points: LatLon[] }[], controlPoints }
+ * body: RouteWeatherRequest { routes: { points: LatLon[] }[], controlPoints, departureTime? }
  * -> { data: RouteWeather[] } (one entry per route, request order; demo data in mock mode)
  */
 export const POST = handle(async ({ request }) => {
@@ -22,16 +22,17 @@ export const POST = handle(async ({ request }) => {
   } catch {
     throw badRequest('Request body must be valid JSON.');
   }
-  const { routes, controlPoints } = parseBody(body);
-  if (isMockMode()) return jsonData(mockWeatherAlongRoutes(routes, controlPoints));
-  return jsonData(await getWeatherAlongRoutes(routes, controlPoints));
+  const { routes, controlPoints, departureTime } = parseBody(body);
+  const departure = departureTime ? new Date(departureTime) : new Date();
+  if (isMockMode()) return jsonData(mockWeatherAlongRoutes(routes, controlPoints, departure));
+  return jsonData(await getWeatherAlongRoutes(routes, controlPoints, departure));
 });
 
 export const ALL = methodNotAllowed(['POST']);
 
 function parseBody(body: unknown): RouteWeatherRequest {
   if (typeof body !== 'object' || body === null) throw badRequest('Request body must be a JSON object.');
-  const { routes, controlPoints } = body as Record<string, unknown>;
+  const { routes, controlPoints, departureTime } = body as Record<string, unknown>;
 
   if (!Array.isArray(routes) || routes.length === 0 || routes.length > MAX_ROUTES) {
     throw badRequest(`"routes" must be an array of 1..${MAX_ROUTES} routes.`);
@@ -52,5 +53,6 @@ function parseBody(body: unknown): RouteWeatherRequest {
     controlPoints: parseNumberInRange(controlPoints, 'controlPoints', CONTROL_POINTS_MIN, CONTROL_POINTS_MAX, {
       integer: true,
     }),
+    departureTime: optionalDeparture(departureTime, 'departureTime')?.toISOString(),
   };
 }

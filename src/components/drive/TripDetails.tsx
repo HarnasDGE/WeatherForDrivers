@@ -1,4 +1,5 @@
 import Icon from '@/components/ui/Icon';
+import { formatClock, formatDayTime } from '@/lib/shared/format';
 import type { RouteData, RouteWeather } from '@/lib/shared/types';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { showNotification } from '@/store/slices/notificationsSlice';
@@ -7,10 +8,12 @@ import {
   changeMainRoute,
   removeFavoriteRoute,
   selectCurrentRouteFavoriteIndex,
+  selectDeparture,
   selectRouteError,
   selectRouteWeatherStatus,
 } from '@/store/slices/routeSlice';
 import { fetchRouteWeather, fetchRouteWithWeather } from '@/store/thunks';
+import DaylightBar from './DaylightBar';
 import RoadTimeline, { RoadTimelineLoading } from './RoadTimeline';
 import RouteOptions from './RouteOptions';
 import { routeOptions, tripVerdict } from './tripSummary';
@@ -28,6 +31,9 @@ export default function TripDetails({ routeData, routeWeather, demo }: TripDetai
   const weatherStatus = useAppSelector(selectRouteWeatherStatus);
   const error = useAppSelector(selectRouteError);
   const savedIndex = useAppSelector(selectCurrentRouteFavoriteIndex);
+  const departure = useAppSelector(selectDeparture);
+  const { departureTime, arrivalTime } = routeData.routes[0].summary;
+  const leaving = departure ? `Leave ${formatDayTime(departureTime)}` : 'Leave now';
 
   const mainPoints = routeWeather[0]?.points ?? [];
   const verdict = tripVerdict(mainPoints);
@@ -46,9 +52,15 @@ export default function TripDetails({ routeData, routeWeather, demo }: TripDetai
   return (
     <div>
       <header className={styles.header}>
-        <h2 className={styles.title}>
-          {routeData.from.name} to {routeData.to.name}
-        </h2>
+        <div>
+          <h2 className={styles.title}>
+            {routeData.from.name} to {routeData.to.name}
+          </h2>
+          <p className={styles.when}>
+            <Icon name="schedule" size={18} />
+            {leaving}, arrive {formatClock(arrivalTime)}
+          </p>
+        </div>
         <div className={styles.actions}>
           <button
             type="button"
@@ -77,6 +89,8 @@ export default function TripDetails({ routeData, routeWeather, demo }: TripDetai
         </p>
       )}
 
+      {weatherStatus !== 'loading' && <DaylightBar points={mainPoints} />}
+
       <RouteOptions options={options} onSelect={(index) => dispatch(changeMainRoute(index))} />
 
       {weatherStatus === 'loading' && <RoadTimelineLoading label="Checking the weather along the road" />}
@@ -93,7 +107,7 @@ export default function TripDetails({ routeData, routeWeather, demo }: TripDetai
       )}
 
       <p className={styles.note}>
-        Times assume you leave now.
+        {departure ? `Times assume you leave ${formatDayTime(departureTime)}.` : 'Times assume you leave now.'}
         {demo && ' Routes and weather on this screen are sample data until the API keys are set.'}
       </p>
     </div>

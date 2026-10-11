@@ -14,8 +14,9 @@
 }
 
 .field:focus-within {
-  border-color: var(--asphalt);
+  border-color: var(--accent);
   background: var(--surface);
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 .icon {
@@ -46,5 +47,5 @@
   padding: 0 16px;
   border-radius: var(--radius-card);
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
 }

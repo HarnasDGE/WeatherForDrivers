@@ -26,7 +26,7 @@ export default function CheckpointMarkers({ points }: { points: RouteWeatherPoin
       const condition = assessRoad(point);
       const icon = L.divIcon({
         className: 'sign',
-        html: `<div class="sign__plate" data-level="${condition.level}" title="${escapeHtml(condition.label)}">
+        html: `<div class="sign__plate" data-level="${condition.level}" data-night="${point.isDay === false}" title="${escapeHtml(condition.label)}">
             <span class="icon" aria-hidden="true">${getWeatherSymbol(point.weatherCode, point.isDay)}</span>
             <b>${formatTemperature(point.temperature)}</b>
           </div>`,

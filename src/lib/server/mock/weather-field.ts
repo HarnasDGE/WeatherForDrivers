@@ -28,6 +28,20 @@ function wetness({ lat, lon }: LatLon, hours: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
+const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+/** Sun above the horizon (incl. refraction), from a simple declination / hour-angle model - good to a few minutes. */
+export function isDaylight({ lat, lon }: LatLon, at: Date): boolean {
+  const dayOfYear = Math.floor((at.getTime() - Date.UTC(at.getUTCFullYear(), 0, 0)) / 86_400_000);
+  const declination = toRad(23.44 * Math.sin((2 * Math.PI * (284 + dayOfYear)) / 365));
+  const solarHours = at.getUTCHours() + at.getUTCMinutes() / 60 + lon / 15;
+  const hourAngle = toRad(15 * (solarHours - 12));
+  const elevation = Math.asin(
+    Math.sin(toRad(lat)) * Math.sin(declination) + Math.cos(toRad(lat)) * Math.cos(declination) * Math.cos(hourAngle),
+  );
+  return elevation > toRad(-0.833);
+}
+
 /** Rough local solar hour from UTC time and longitude. */
 const localHour = (date: Date, lon: number) => (((date.getUTCHours() + date.getUTCMinutes() / 60 + lon / 15) % 24) + 24) % 24;
 
@@ -54,6 +68,6 @@ export function sampleWeather(point: LatLon, at: Date): FieldSample {
     temperature,
     windSpeed: Math.round(8 + wet * 30),
     humidity: Math.round(45 + wet * 50),
-    isDay: hour >= 7 && hour < 19,
+    isDay: isDaylight(point, at),
   };
 }

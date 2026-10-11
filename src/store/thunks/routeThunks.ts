@@ -9,6 +9,7 @@ import {
   routeWeatherLoaded,
   routeWeatherRequested,
   setControlPoints,
+  setDeparture,
   setRouteType,
 } from '../slices/routeSlice';
 import type { FavoriteRoute } from '../slices/routeSlice';
@@ -16,6 +17,10 @@ import { errorMessage } from './types';
 import type { AppThunk } from './types';
 
 const trimInput = (place: PlaceInput): PlaceInput => (typeof place === 'string' ? place.trim() : place);
+
+/** The planned departure, or undefined for "now" (a departure that has already passed also means now). */
+const plannedDeparture = (departure: string | null): string | undefined =>
+  departure && new Date(departure).getTime() > Date.now() ? departure : undefined;
 
 /** Fetches the route (main + alternatives) using the current `routeType`. Picked places skip server-side geocoding. */
 export const fetchRoute =
@@ -27,9 +32,12 @@ export const fetchRoute =
       dispatch(showNotification('Enter where you start and where you are going.', 'alert'));
       return false;
     }
+    const { routeType, departure } = getState().route;
+    const departAt = plannedDeparture(departure);
+    if (!departAt && departure) dispatch(setDeparture(null));
     dispatch(routeRequested({ from: api.placeName(start), to: api.placeName(end) }));
     try {
-      const data = await api.fetchRoute(start, end, getState().route.routeType);
+      const data = await api.fetchRoute(start, end, routeType, departAt);
       dispatch(routeLoaded(data));
       return true;
     } catch (error) {
@@ -45,7 +53,7 @@ export const fetchRoute =
  * If the user swaps the main route while this is running, results are re-aligned to the new order.
  */
 export const fetchRouteWeather = (): AppThunk<boolean> => async (dispatch, getState) => {
-  const { routeData, controlPoints } = getState().route;
+  const { routeData, controlPoints, departure } = getState().route;
   if (!routeData || routeData.routes.length === 0) {
     dispatch(showNotification('Check a route first.', 'alert'));
     return false;
@@ -53,7 +61,9 @@ export const fetchRouteWeather = (): AppThunk<boolean> => async (dispatch, getSt
   const requested = routeData.routes;
   dispatch(routeWeatherRequested());
   try {
-    const result = await api.fetchRouteWeather({ routes: requested, controlPoints });
+    // Same departure as the route itself, so arrival times match its summary.
+    const departureTime = plannedDeparture(departure) && requested[0]?.summary.departureTime;
+    const result = await api.fetchRouteWeather({ routes: requested, controlPoints, departureTime: departureTime || undefined });
 
     const current = getState().route.routeData?.routes ?? [];
     const aligned = current.map((route, index) => {

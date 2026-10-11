@@ -26,6 +26,8 @@ interface CalculateRouteOptions {
   maxAlternatives?: number;
   /** Return geometry (default true). */
   withPoints?: boolean;
+  /** Departure for traffic and arrival times (default: now). */
+  departAt?: Date;
 }
 
 const toLocation = (p: LatLon) => `${p.lat},${p.lon}`;
@@ -39,6 +41,9 @@ async function calculateRouteRaw(from: LatLon, to: LatLon, options: CalculateRou
   if (options.routeType) url.searchParams.set('routeType', options.routeType);
   if (options.maxAlternatives) url.searchParams.set('maxAlternatives', String(options.maxAlternatives));
   if (options.withPoints === false) url.searchParams.set('routeRepresentation', 'summaryOnly');
+  if (options.departAt && options.departAt.getTime() > Date.now()) {
+    url.searchParams.set('departAt', options.departAt.toISOString());
+  }
 
   const res = await fetchJson<TomTomRouteResponse>(url, { service: SERVICE, retries: 2 });
   if (!res.routes?.length) return [];
@@ -46,8 +51,13 @@ async function calculateRouteRaw(from: LatLon, to: LatLon, options: CalculateRou
 }
 
 /** Main route + up to 2 alternatives (legacy `fetchRoute`, maxAlternatives=2). */
-export async function calculateRoutes(from: LatLon, to: LatLon, routeType: RouteType): Promise<Route[]> {
-  const routes = await calculateRouteRaw(from, to, { routeType, maxAlternatives: 2 });
+export async function calculateRoutes(
+  from: LatLon,
+  to: LatLon,
+  routeType: RouteType,
+  departAt?: Date,
+): Promise<Route[]> {
+  const routes = await calculateRouteRaw(from, to, { routeType, maxAlternatives: 2, departAt });
   return routes.map((r) => ({
     summary: {
       lengthInMeters: r.summary.lengthInMeters,
@@ -65,7 +75,7 @@ export async function calculateRoutes(from: LatLon, to: LatLon, routeType: Route
  * request in `fetchWeatherInformation`; default routeType like legacy).
  * Only the summary is requested to keep responses small.
  */
-export async function getTravelSummary(from: LatLon, to: LatLon): Promise<TomTomSummary | null> {
-  const routes = await calculateRouteRaw(from, to, { withPoints: false });
+export async function getTravelSummary(from: LatLon, to: LatLon, departAt?: Date): Promise<TomTomSummary | null> {
+  const routes = await calculateRouteRaw(from, to, { withPoints: false, departAt });
   return routes[0]?.summary ?? null;
 }

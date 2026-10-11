@@ -1,20 +1,45 @@
-/* Design tokens - see docs/DESIGN.md. Dark values follow the system setting (night driving). */
+/*
+ * Design tokens - see docs/DESIGN.md.
+ * Light is the default; <html data-theme="dark"> switches to dark (set before first paint, see BaseLayout).
+ */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
-  --asphalt: #262b33;
-  --kerb: #646c78;
-  --verge: #edf0f3;
+  /* Ink and surfaces */
+  --asphalt: #1f242c;
+  --kerb: #5f6875;
+  --verge: #eef1f5;
   --surface: #ffffff;
-  --backdrop: #dfe3e8;
-  --marking: #f4c20d;
-  --on-marking: #262b33;
+  --surface-raised: #ffffff;
+  --backdrop: #e4e8ee;
+  --line: rgba(31, 36, 44, 0.1);
+
+  /* Accent: motorway-sign blue for selection, focus and links */
+  --accent: #2457d6;
+  --accent-soft: #e7eefc;
+  --on-accent: #ffffff;
+
+  /* Road marking yellow: primary action and "caution" */
+  --marking: #f5c211;
+  --on-marking: #1f242c;
+
+  /* Conditions */
   --hazard: #d23c2f;
-  --clear: #1d8a6b;
-  --line: rgba(38, 43, 51, 0.12);
+  --clear: #12805f;
+
+  /* Road drawing: asphalt by day, deep indigo in the dark */
   --road: #3a414b;
   --road-dash: #ffffff;
-  --shadow: 0 1px 2px rgba(38, 43, 51, 0.12), 0 8px 24px rgba(38, 43, 51, 0.14);
+  --night: #2f2a78;
+  --night-soft: #ebe9fb;
+  --daylight: #f8df8b;
+
+  /* Elevation: layered, soft shadows */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --shadow-md: 0 2px 4px -1px rgba(16, 24, 40, 0.06), 0 8px 16px -4px rgba(16, 24, 40, 0.14);
+  --shadow-lg: 0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 20px 40px -8px rgba(16, 24, 40, 0.24);
+  --shadow-sheet: 0 -2px 6px rgba(16, 24, 40, 0.05), 0 -16px 40px -12px rgba(16, 24, 40, 0.24);
+  --ring: 0 0 0 1px var(--line);
 
   --font: 'Overpass', system-ui, sans-serif;
   --text-xs: 0.8125rem; /* 13 */
@@ -24,28 +49,44 @@
   --text-xl: 2.125rem; /* 34 */
   --text-xxl: 3.5rem; /* 56 */
 
-  --radius-sheet: 22px;
-  --radius-card: 16px;
-  --radius-field: 12px;
+  --radius-sheet: 28px;
+  --radius-card: 20px;
+  --radius-field: 14px;
+  --radius-sm: 10px;
 
-  --nav-height: calc(64px + env(safe-area-inset-bottom));
+  --nav-height: calc(68px + env(safe-area-inset-bottom));
   --gutter: 16px;
   --panel-width: 420px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --asphalt: #e9ecef;
-    --kerb: #9ba3ae;
-    --verge: #262c34;
-    --surface: #1a1f25;
-    --backdrop: #12161b;
-    --on-marking: #1a1f25;
-    --hazard: #ff6b5e;
-    --clear: #4cc9a4;
-    --line: rgba(233, 236, 239, 0.12);
-    --road: #535c68;
-    --road-dash: #e9ecef;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.45);
-  }
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --asphalt: #e8ebf0;
+  --kerb: #9aa3b0;
+  --verge: #232a33;
+  --surface: #181d24;
+  --surface-raised: #1f252d;
+  --backdrop: #0f1318;
+  --line: rgba(232, 235, 240, 0.1);
+
+  --accent: #7aa2ff;
+  --accent-soft: rgba(122, 162, 255, 0.16);
+  --on-accent: #0f1318;
+
+  --on-marking: #15191f;
+
+  --hazard: #ff6b5e;
+  --clear: #45c79f;
+
+  --road: #4a535f;
+  --road-dash: #e8ebf0;
+  --night: #4a43b8;
+  --night-soft: rgba(124, 115, 255, 0.16);
+  --daylight: #a8913d;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 4px -1px rgba(0, 0, 0, 0.4), 0 8px 16px -4px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 4px 8px -2px rgba(0, 0, 0, 0.5), 0 20px 40px -8px rgba(0, 0, 0, 0.6);
+  --shadow-sheet: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 -16px 40px -12px rgba(0, 0, 0, 0.7);
 }

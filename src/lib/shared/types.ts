@@ -221,6 +221,8 @@ export interface RouteWeatherRequest {
   routes: Array<Pick<Route, 'points'>>;
   /** Density of control points per route, integer 3..20 (legacy slider range). */
   controlPoints: number;
+  /** ISO 8601 departure, now..+3 days; omitted = leave now. */
+  departureTime?: string;
 }
 
 /** `RouteWeatherPoint.name` when the point could not be named. */

@@ -72,8 +72,9 @@ const placeParams = (key: 'from' | 'to', place: PlaceInput) =>
     ? { [key]: place }
     : { [key]: place.name, [`${key}Lat`]: place.lat, [`${key}Lon`]: place.lon };
 
-export function fetchRoute(from: PlaceInput, to: PlaceInput, routeType?: RouteType): Promise<RouteData> {
-  return request(`/api/route?${qs({ ...placeParams('from', from), ...placeParams('to', to), routeType })}`);
+/** `departAt`: ISO departure, omitted = leave now. */
+export function fetchRoute(from: PlaceInput, to: PlaceInput, routeType?: RouteType, departAt?: string): Promise<RouteData> {
+  return request(`/api/route?${qs({ ...placeParams('from', from), ...placeParams('to', to), routeType, departAt })}`);
 }
 
 export function fetchRouteWeather(body: RouteWeatherRequest): Promise<RouteWeather[]> {

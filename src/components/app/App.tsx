@@ -2,6 +2,7 @@ import StoreProvider from '@/components/providers/StoreProvider';
 import DriveScreen from '@/components/drive/DriveScreen';
 import ForecastScreen from '@/components/forecast/ForecastScreen';
 import Notifications from '@/components/ui/Notifications';
+import { useApplyTheme } from '@/hooks/useTheme';
 import { useAppSelector } from '@/store/hooks';
 import { selectTab } from '@/store/slices/uiSlice';
 import { selectHydrated } from '@/store/slices/weatherSlice';
@@ -16,6 +17,7 @@ interface AppProps {
 function AppShell({ demo }: AppProps) {
   const hydrated = useAppSelector(selectHydrated);
   const tab = useAppSelector(selectTab);
+  useApplyTheme();
 
   return (
     <div className={styles.shell}>

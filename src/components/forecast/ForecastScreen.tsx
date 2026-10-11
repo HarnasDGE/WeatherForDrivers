@@ -37,8 +37,9 @@ export default function ForecastScreen() {
 
   return (
     <div className={styles.screen}>
-      <div className={styles.column}>
-        <div className={styles.top}>
+      {/* Fixed header: the search never scrolls away; only the forecast below scrolls. */}
+      <div className={styles.top}>
+        <div className={styles.topInner}>
           <PlaceSearch
             onPick={(picked) => void dispatch(loadPlace(picked))}
             onSubmitText={(text) => void dispatch(searchPlace(text))}
@@ -60,45 +61,49 @@ export default function ForecastScreen() {
             </ul>
           )}
         </div>
+      </div>
 
-        {place && forecast ? (
-          <article className={styles.place} aria-busy={status === 'loading'}>
-            <header className={styles.header}>
-              <div>
-                <h1 className={styles.name}>{place.name}</h1>
-                {placeDetails(place) && <p className={styles.details}>{placeDetails(place)}</p>}
-              </div>
-              <button
-                type="button"
-                className={styles.save}
-                aria-pressed={isSaved}
-                aria-label={isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`}
-                onClick={() => dispatch(toggleSavedPlace())}
-              >
-                <Icon name="bookmark" filled={isSaved} />
-              </button>
-            </header>
-            <CurrentConditions slot={hourSlot(forecast, currentHourIndex(forecast))} />
-            <HourlyStrip slots={nextHours(forecast, 24)} />
-            <DailyList daily={forecast.daily} />
-            <p className={styles.source}>
-              Forecast from{' '}
-              <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">
-                Open-Meteo
-              </a>
-              .
+      <div className={styles.scroll}>
+        <div className={styles.column}>
+          {place && forecast ? (
+            <article className={styles.place} aria-busy={status === 'loading'}>
+              <header className={styles.header}>
+                <div>
+                  <h1 className={styles.name}>{place.name}</h1>
+                  {placeDetails(place) && <p className={styles.details}>{placeDetails(place)}</p>}
+                </div>
+                <button
+                  type="button"
+                  className={styles.save}
+                  aria-pressed={isSaved}
+                  aria-label={isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`}
+                  onClick={() => dispatch(toggleSavedPlace())}
+                >
+                  <Icon name="bookmark" filled={isSaved} />
+                </button>
+              </header>
+              <CurrentConditions slot={hourSlot(forecast, currentHourIndex(forecast))} />
+              <HourlyStrip slots={nextHours(forecast, 24)} />
+              <DailyList daily={forecast.daily} />
+              <p className={styles.source}>
+                Forecast from{' '}
+                <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">
+                  Open-Meteo
+                </a>
+                .
+              </p>
+            </article>
+          ) : status === 'loading' ? (
+            <p className={styles.status} role="status">
+              Loading the forecast
             </p>
-          </article>
-        ) : status === 'loading' ? (
-          <p className={styles.status} role="status">
-            Loading the forecast
-          </p>
-        ) : (
-          <div className={styles.empty}>
-            <h1 className={styles.emptyTitle}>Check a town before you go</h1>
-            <p>Search for any town to see the next five days, and what the weather means for the roads there.</p>
-          </div>
-        )}
+          ) : (
+            <div className={styles.empty}>
+              <h1 className={styles.emptyTitle}>Check a town before you go</h1>
+              <p>Search for any town to see the next five days, and what the weather means for the roads there.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

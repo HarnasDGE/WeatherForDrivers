@@ -91,6 +91,24 @@ export function isValidLatLon(value: unknown): value is LatLon {
   );
 }
 
+/** How far ahead a trip can be planned - forecasts get coarse beyond that. */
+export const MAX_DEPARTURE_AHEAD_MS = 3 * 24 * 3600 * 1000;
+/** Small tolerance for a "now" picked a moment ago. */
+const DEPARTURE_PAST_TOLERANCE_MS = 15 * 60 * 1000;
+
+/** Optional ISO departure time; undefined when absent, 400 when invalid or outside now..+3 days. */
+export function optionalDeparture(raw: unknown, name: string): Date | undefined {
+  if (raw === undefined || raw === null || raw === '') return undefined;
+  const date = typeof raw === 'string' ? new Date(raw) : new Date(NaN);
+  const now = Date.now();
+  if (Number.isNaN(date.getTime())) throw badRequest(`"${name}" must be an ISO 8601 date-time.`);
+  if (date.getTime() < now - DEPARTURE_PAST_TOLERANCE_MS || date.getTime() > now + MAX_DEPARTURE_AHEAD_MS) {
+    throw badRequest(`"${name}" must be between now and 3 days ahead.`);
+  }
+  // A departure in the last few minutes means "now".
+  return date.getTime() < now ? new Date(now) : date;
+}
+
 /** Reads required `lat` & `lon` query params. */
 export function requiredLatLon(params: URLSearchParams): LatLon {
   if (params.get('lat') === null || params.get('lon') === null) {

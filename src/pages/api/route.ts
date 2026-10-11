@@ -1,5 +1,5 @@
 import { ROUTE_TYPES, type Place, type RouteData, type RouteType } from '@/lib/shared/types';
-import { handle, jsonData, methodNotAllowed, parseNumberInRange, requiredString } from '@/lib/server/api';
+import { handle, jsonData, methodNotAllowed, optionalDeparture, parseNumberInRange, requiredString } from '@/lib/server/api';
 import { isMockMode, requireSecret } from '@/lib/server/config';
 import { badRequest, notFound } from '@/lib/server/errors';
 import { mockRoutes } from '@/lib/server/mock/routes';
@@ -7,7 +7,7 @@ import { searchPlaces } from '@/lib/server/services/openmeteo';
 import { calculateRoutes } from '@/lib/server/services/tomtom';
 
 /**
- * GET /api/route?from&to[&routeType=fastest][&fromLat&fromLon][&toLat&toLon] -> { data: RouteData }
+ * GET /api/route?from&to[&routeType=fastest][&fromLat&fromLon][&toLat&toLon][&departAt=ISO] -> { data: RouteData }
  * Geocodes both names (first match) unless coordinates are given, then asks TomTom
  * for the route + 2 alternatives (demo routes in mock mode).
  */
@@ -18,11 +18,14 @@ export const GET = handle(async ({ url }) => {
     throw badRequest(`"routeType" must be one of: ${ROUTE_TYPES.join(', ')}.`);
   }
 
+  const departAt = optionalDeparture(params.get('departAt'), 'departAt');
   const mock = isMockMode();
   if (!mock) requireSecret('TOMTOM_API_KEY'); // fail fast before geocoding
 
   const [from, to] = await Promise.all([resolvePlace(params, 'from'), resolvePlace(params, 'to')]);
-  const routes = mock ? mockRoutes(from, to, routeType) : await calculateRoutes(from, to, routeType);
+  const routes = mock
+    ? mockRoutes(from, to, routeType, departAt)
+    : await calculateRoutes(from, to, routeType, departAt);
   if (routes.length === 0) throw notFound(`No route found from "${from.name}" to "${to.name}".`);
 
   const data: RouteData = { from, to, routeType, routes };

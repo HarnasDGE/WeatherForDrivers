@@ -27,7 +27,7 @@ function bentLine(from: LatLon, to: LatLon, bend: number, wiggle: number): LatLo
   });
 }
 
-export function mockRoutes(from: Place, to: Place, routeType: RouteType, now = new Date()): Route[] {
+export function mockRoutes(from: Place, to: Place, routeType: RouteType, departure = new Date()): Route[] {
   if (from.lat === to.lat && from.lon === to.lon) return [];
   return VARIANTS.map((variant) => {
     const points = bentLine(from, to, variant.bend, variant.wiggle);
@@ -41,8 +41,8 @@ export function mockRoutes(from: Place, to: Place, routeType: RouteType, now = n
         lengthInMeters,
         travelTimeInSeconds,
         trafficDelayInSeconds,
-        departureTime: now.toISOString(),
-        arrivalTime: new Date(now.getTime() + travelTimeInSeconds * 1000).toISOString(),
+        departureTime: departure.toISOString(),
+        arrivalTime: new Date(departure.getTime() + travelTimeInSeconds * 1000).toISOString(),
       },
       points,
     };

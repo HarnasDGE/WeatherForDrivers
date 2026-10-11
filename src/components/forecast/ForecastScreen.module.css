@@ -1,23 +1,35 @@
 .screen {
   position: absolute;
   inset: 0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
-}
-
-.column {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: calc(12px + env(safe-area-inset-top)) var(--gutter) 40px;
 }
 
 .top {
-  position: sticky;
+  position: relative;
   z-index: 5;
-  top: 0;
-  margin: 0 calc(-1 * var(--gutter));
-  padding: 8px var(--gutter) 10px;
+  flex: none;
+  padding: calc(12px + env(safe-area-inset-top)) var(--gutter) 12px;
   background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.topInner,
+.column {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.column {
+  padding: 8px var(--gutter) 40px;
 }
 
 .saved {
@@ -40,7 +52,9 @@
 }
 
 .chip[aria-pressed='true'] {
-  border-color: var(--asphalt);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .place {
@@ -80,6 +94,15 @@
   border: 0;
   border-radius: 50%;
   background: var(--verge);
+}
+
+.save[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.source a {
+  color: var(--accent);
 }
 
 .source {

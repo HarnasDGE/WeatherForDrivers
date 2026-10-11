@@ -1,13 +1,14 @@
 .nav {
   z-index: 20;
   display: flex;
+  align-items: stretch;
   background: var(--surface);
   border-top: 1px solid var(--line);
-  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -8px 24px -16px rgba(16, 24, 40, 0.3);
+  padding: 0 8px env(safe-area-inset-bottom);
 }
 
 .item {
-  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -21,19 +22,27 @@
   font-weight: 600;
 }
 
-/* Active tab: a short lane-marking dash on the bar's edge. */
+/* Icon sits in a pill that fills with the accent when the tab is active. */
+.pill {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 30px;
+  border-radius: 999px;
+  transition: background-color 160ms;
+}
+
 .item[aria-current='page'] {
   color: var(--asphalt);
 }
 
-.item[aria-current='page']::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  width: 36px;
-  height: 4px;
-  border-radius: 0 0 3px 3px;
-  background: var(--marking);
+.item[aria-current='page'] .pill {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.theme {
+  flex: 0 0 72px;
 }
 
 @media (min-width: 900px) {
@@ -46,6 +55,7 @@
     padding: 24px 0;
     border-top: 0;
     border-right: 1px solid var(--line);
+    box-shadow: none;
   }
 
   .item {
@@ -53,11 +63,8 @@
     height: 72px;
   }
 
-  .item[aria-current='page']::before {
-    top: auto;
-    left: -1px;
-    width: 4px;
-    height: 36px;
-    border-radius: 0 3px 3px 0;
+  .theme {
+    flex: none;
+    margin-top: auto;
   }
 }

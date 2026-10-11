@@ -1,5 +1,6 @@
 ---
 import '@/styles/global.css';
+import { STORAGE_KEY } from '@/store/persist';
 
 interface Props {
   title?: string;
@@ -15,17 +16,21 @@ const {
 const ICONS = [
   'air',
   'arrow_back',
+  'bedtime',
   'bookmark',
+  'brightness_auto',
   'check_circle',
   'clear_day',
   'clear_night',
   'close',
   'cloud',
+  'dark_mode',
   'delete',
   'directions_car',
   'error',
   'foggy',
   'info',
+  'light_mode',
   'location_on',
   'partly_cloudy_day',
   'partly_cloudy_night',
@@ -35,6 +40,7 @@ const ICONS = [
   'rainy_light',
   'rainy_snow',
   'refresh',
+  'schedule',
   'search',
   'snowing_heavy',
   'swap_vert',
@@ -42,6 +48,7 @@ const ICONS = [
   'umbrella',
   'visibility',
   'warning',
+  'wb_twilight',
   'weather_snowy',
 ];
 ---
@@ -50,9 +57,17 @@ const ICONS = [
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1a1f25" media="(prefers-color-scheme: dark)" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#ffffff" />
+    <!-- Pick the saved / system theme before first paint (the React app keeps it in sync afterwards). -->
+    <script is:inline define:vars={{ storageKey: STORAGE_KEY }}>
+      let preference = 'system';
+      try {
+        preference = JSON.parse(localStorage.getItem(storageKey) || '{}').ui?.theme || 'system';
+      } catch {}
+      const dark = preference === 'dark' || (preference === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    </script>
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />

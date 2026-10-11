@@ -19,7 +19,7 @@ import { getTravelSummary } from './tomtom';
  *  - the `delay(index * 1000)` staggering is replaced by a bounded worker pool
  *    (ROUTE_WEATHER_CONCURRENCY) + retry with backoff on 429/5xx;
  *  - identical points (shared start/destination of alternatives) are fetched once;
- *  - the route start itself needs no TomTom call (distance 0, arrival = now);
+ *  - the route start itself needs no TomTom call (distance 0, arrival = departure);
  *  - Open-Meteo is queried once for all points (multi-location request);
  *  - times are matched as UTC instants, independent of the server timezone.
  */
@@ -51,12 +51,13 @@ interface PointTravel {
 export async function getWeatherAlongRoutes(
   routes: ReadonlyArray<{ points: readonly LatLon[] }>,
   controlPoints: number,
+  departure = new Date(),
 ): Promise<RouteWeather[]> {
   // Fail fast with a readable config error before doing any work.
   requireSecret('TOMTOM_API_KEY');
   requireSecret('OPENWEATHER_API_KEY');
 
-  const now = new Date();
+  const now = departure;
   const perRoute = routes.map((route) => ({
     start: route.points[0] as LatLon,
     selected: selectControlPoints(route.points, controlPoints),
@@ -72,7 +73,7 @@ export async function getWeatherAlongRoutes(
   const travels = await mapWithConcurrency(taskList, ROUTE_WEATHER_CONCURRENCY, async ([, { start, point }]) => {
     const isStart = pointKey(start) === pointKey(point);
     const [summary, name] = await Promise.all([
-      isStart ? null : getTravelSummary(start, point),
+      isStart ? null : getTravelSummary(start, point, departure),
       reverseGeocodeSafe(point),
     ]);
     if (!isStart && !summary) {

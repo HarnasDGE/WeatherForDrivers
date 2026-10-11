@@ -24,6 +24,8 @@ export interface RouteState {
   routeType: RouteType;
   /** Control points per route, 3..20. */
   controlPoints: number;
+  /** Planned departure (ISO), null = leave now. Not persisted - a stored time would soon be in the past. */
+  departure: string | null;
   /** routes[0] is the main route; alternatives follow. `from`/`to` are the geocoded places. */
   routeData: RouteData | null;
   /** Index-aligned with routeData.routes (reordered together with it). */
@@ -44,6 +46,7 @@ const initialState: RouteState = {
   query: { from: '', to: '' },
   routeType: 'fastest',
   controlPoints: 7,
+  departure: null,
   routeData: null,
   routeWeather: [],
   routeStatus: 'idle',
@@ -61,6 +64,9 @@ const routeSlice = createSlice({
     },
     setControlPoints(state, action: PayloadAction<number>) {
       state.controlPoints = Math.min(MAX_CONTROL_POINTS, Math.max(MIN_CONTROL_POINTS, Math.round(action.payload)));
+    },
+    setDeparture(state, action: PayloadAction<string | null>) {
+      state.departure = action.payload;
     },
     routeRequested(state, action: PayloadAction<{ from: string; to: string }>) {
       state.query = action.payload;
@@ -139,6 +145,7 @@ const routeSlice = createSlice({
     selectRouteQuery: (state) => state.query,
     selectRouteType: (state) => state.routeType,
     selectControlPoints: (state) => state.controlPoints,
+    selectDeparture: (state) => state.departure,
     selectRouteData: (state) => state.routeData,
     selectRouteWeather: (state) => state.routeWeather,
     selectRouteStatus: (state) => state.routeStatus,
@@ -154,6 +161,7 @@ const routeSlice = createSlice({
 });
 
 export const {
+  setDeparture,
   setRouteType,
   setControlPoints,
   routeRequested,
@@ -173,6 +181,7 @@ export const {
   selectRouteQuery,
   selectRouteType,
   selectControlPoints,
+  selectDeparture,
   selectRouteData,
   selectRouteWeather,
   selectRouteStatus,

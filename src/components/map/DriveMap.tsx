@@ -1,7 +1,7 @@
 import { MapContainer, Pane, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Route, RouteWeather } from '@/lib/shared/types';
-import { DARK_QUERY, useMediaQuery } from '@/hooks/useMediaQuery';
+import { useResolvedTheme } from '@/hooks/useTheme';
 import { DEFAULT_CENTER, DEFAULT_ZOOM, MAX_ZOOM, TILES, TILE_ATTRIBUTION } from './mapConfig';
 import type { MapInsets } from './mapConfig';
 import MapResizeFix from './MapResizeFix';
@@ -19,7 +19,7 @@ interface DriveMapProps {
 }
 
 export default function DriveMap({ routes, weather, insets, onSelectRoute }: DriveMapProps) {
-  const dark = useMediaQuery(DARK_QUERY);
+  const dark = useResolvedTheme() === 'dark';
   const mainWeather = weather[0]?.points ?? [];
   const tiles = dark ? TILES.dark : TILES.light;
 

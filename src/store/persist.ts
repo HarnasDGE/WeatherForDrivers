@@ -2,7 +2,7 @@ import type { Store } from '@reduxjs/toolkit';
 import type { RootState } from './root-reducer';
 
 /** Bump the version when the persisted shape changes (old data is then ignored). */
-const STORAGE_KEY = 'weatherfordrivers:v2';
+export const STORAGE_KEY = 'weatherfordrivers:v2';
 
 type WeatherPersisted = Pick<RootState['weather'], 'place' | 'forecast' | 'savedPlaces'>;
 type RoutePersisted = Pick<RootState['route'], 'query' | 'routeType' | 'controlPoints' | 'favoriteRoutes'>;

@@ -9,14 +9,17 @@ import type { Place, RouteType } from '@/lib/shared/types';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   selectControlPoints,
+  selectDeparture,
   selectFavoriteRoutes,
   selectRouteData,
   selectRouteQuery,
   selectRouteType,
   setControlPoints,
+  setDeparture,
   setRouteType,
 } from '@/store/slices/routeSlice';
 import type { FavoriteRoute } from '@/store/slices/routeSlice';
+import DeparturePicker from './DeparturePicker';
 import styles from './TripPlanner.module.css';
 
 const ROUTE_TYPE_LABELS: Record<RouteType, string> = {
@@ -58,6 +61,7 @@ export default function TripPlanner({ onClose, onSubmit, onPickSaved }: TripPlan
   const routeType = useAppSelector(selectRouteType);
   const controlPoints = useAppSelector(selectControlPoints);
   const saved = useAppSelector(selectFavoriteRoutes);
+  const departure = useAppSelector(selectDeparture);
 
   const [from, setFrom] = useState<FieldValue>(() => ({
     text: query.from,
@@ -156,6 +160,8 @@ export default function TripPlanner({ onClose, onSubmit, onPickSaved }: TripPlan
             <PlaceSuggestionList id="planner-suggestions" places={places} onPick={pick} />
           ) : (
             <>
+              <DeparturePicker value={departure} onChange={(value) => dispatch(setDeparture(value))} />
+
               <fieldset className={styles.choice}>
                 <legend>Route</legend>
                 <div className={styles.chips}>

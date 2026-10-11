@@ -20,12 +20,34 @@ const RANK: Record<RoadLevel, number> = { unknown: 0, good: 1, caution: 2, dange
 const toLatLng = (p: LatLon) => [p.lat, p.lon] as L.LatLngTuple;
 const key = (p: LatLon) => `${p.lat},${p.lon}`;
 
+/** Checkpoints with their index in the route geometry (their coordinates are points of the route). */
+function locate(route: Route, checkpoints: RouteWeatherPoint[]) {
+  const indexByKey = new Map(route.points.map((p, i) => [key(p), i]));
+  return checkpoints
+    .map((cp) => ({ cp, index: indexByKey.get(key(cp)) }))
+    .filter((item): item is { cp: RouteWeatherPoint; index: number } => item.index !== undefined);
+}
+
+/** Main-route stretches driven in the dark; where the light changes between two checkpoints, the change is put halfway. */
+function nightStretches(route: Route, checkpoints: RouteWeatherPoint[]): LatLon[][] {
+  const located = locate(route, checkpoints);
+  const stretches: LatLon[][] = [];
+  for (let i = 1; i < located.length; i++) {
+    const a = located[i - 1];
+    const b = located[i];
+    const mid = Math.round((a.index + b.index) / 2);
+    const aNight = a.cp.isDay === false;
+    const bNight = b.cp.isDay === false;
+    if (aNight && bNight) stretches.push(route.points.slice(a.index, b.index + 1));
+    else if (aNight) stretches.push(route.points.slice(a.index, mid + 1));
+    else if (bNight) stretches.push(route.points.slice(mid, b.index + 1));
+  }
+  return stretches;
+}
+
 /** Main-route stretches between checkpoints, tagged with the worse condition of their two ends. */
 function hazardStretches(route: Route, checkpoints: RouteWeatherPoint[]) {
-  const indexByKey = new Map(route.points.map((p, i) => [key(p), i]));
-  const located = checkpoints
-    .map((cp) => ({ index: indexByKey.get(key(cp)), level: assessRoad(cp).level }))
-    .filter((cp): cp is { index: number; level: RoadLevel } => cp.index !== undefined);
+  const located = locate(route, checkpoints).map(({ cp, index }) => ({ index, level: assessRoad(cp).level }));
   const stretches: Array<{ points: LatLon[]; level: RoadLevel }> = [];
   for (let i = 1; i < located.length; i++) {
     const a = located[i - 1];
@@ -43,7 +65,7 @@ const pinIcon = (variant: 'start' | 'end') =>
 
 /**
  * Draws the routes as roads: alternatives in grey (tap to switch), the main route as asphalt with a dashed
- * centre line, and an amber/red edge where the weather makes the road worse.
+ * centre line - indigo where it is driven in the dark - and an amber/red edge where the weather makes the road worse.
  */
 export default function RouteLayers({ routes, mainWeather, insets, onSelectRoute }: RouteLayersProps) {
   const map = useMap();
@@ -83,6 +105,13 @@ export default function RouteLayers({ routes, mainWeather, insets, onSelectRoute
       }).addTo(group);
     }
     L.polyline(main.points.map(toLatLng), { className: 'route-main', weight: 8, interactive: false }).addTo(group);
+    for (const stretch of nightStretches(main, mainWeather)) {
+      L.polyline(stretch.map(toLatLng), {
+        className: 'route-main route-main--night',
+        weight: 8,
+        interactive: false,
+      }).addTo(group);
+    }
     L.polyline(main.points.map(toLatLng), {
       className: 'route-dash',
       weight: 2,

@@ -11,7 +11,7 @@ const AVERAGE_SPEED_MS = (86 * 1000) / 3600;
 export function mockWeatherAlongRoutes(
   routes: ReadonlyArray<{ points: readonly LatLon[] }>,
   controlPoints: number,
-  now = new Date(),
+  departure = new Date(),
 ): RouteWeather[] {
   return routes.map((route, routeIndex) => {
     const distances = cumulativeMeters(route.points);
@@ -21,7 +21,7 @@ export function mockWeatherAlongRoutes(
       points: selectControlPoints(indexed, controlPoints).map(({ point, index }) => {
         const lengthInMeters = Math.round(distances[index] * ROAD_FACTOR);
         const travelTimeInSeconds = Math.round(lengthInMeters / AVERAGE_SPEED_MS);
-        const arrival = roundToFifteenMinutes(new Date(now.getTime() + travelTimeInSeconds * 1000));
+        const arrival = roundToFifteenMinutes(new Date(departure.getTime() + travelTimeInSeconds * 1000));
         const sample = sampleWeather(point, arrival);
         return {
           lat: point.lat,

@@ -96,6 +96,7 @@ Place metadata (`name`, `countryCode`) is **not** included – take it from `/ap
 | `routeType` | no       | `fastest` (default) \| `shortest` \| `eco` \| `thrilling` (`RouteType`)    |
 | `fromLat`, `fromLon` | no | coordinates of a place picked from `/api/geocode`; skips geocoding `from` (both or neither) |
 | `toLat`, `toLon`     | no | same for `to`                                                    |
+| `departAt`  | no       | ISO 8601 departure, now..+3 days (default: now); sets traffic and arrival times |
 
 `200 { data: RouteData }`:
 
@@ -120,7 +121,8 @@ Body (`Content-Type: application/json`, `RouteWeatherRequest`):
 ```ts
 {
   routes: Array<{ points: LatLon[] }>, // 1..3 routes, 2..50 000 points each – pass RouteData.routes as-is
-  controlPoints: number               // integer 3..20 (legacy slider; default in legacy store: 5)
+  controlPoints: number,              // integer 3..20 (legacy slider; default in legacy store: 5)
+  departureTime?: string              // ISO 8601, now..+3 days; omitted = leave now
 }
 ```
 

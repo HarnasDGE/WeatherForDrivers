@@ -6,13 +6,19 @@
   box-sizing: border-box;
 }
 
+/* The app is a fixed, full-screen shell: the document itself never scrolls, so mobile browsers
+   cannot slide the trip bar or the bottom nav away. Only inner panels scroll. */
 html,
 body {
   margin: 0;
   height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
+  position: fixed;
+  inset: 0;
   background: var(--backdrop);
   color: var(--asphalt);
   font-family: var(--font);
@@ -53,7 +59,7 @@ a {
 }
 
 :focus-visible {
-  outline: 3px solid var(--marking);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
 

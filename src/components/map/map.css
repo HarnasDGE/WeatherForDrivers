@@ -29,6 +29,10 @@
   stroke-linejoin: round;
 }
 
+.route-main--night {
+  stroke: var(--night);
+}
+
 .route-dash {
   stroke: var(--road-dash);
   stroke-opacity: 0.9;
@@ -58,14 +62,14 @@
   font-size: var(--text-xs);
   font-weight: 800;
   white-space: nowrap;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-md);
   cursor: pointer;
 }
 
 .trip-pin {
   background: var(--surface);
   border: 5px solid var(--road);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
 }
 
 .trip-pin--start {
@@ -86,11 +90,11 @@
   align-items: center;
   gap: 2px;
   padding: 3px 7px 3px 4px;
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--asphalt);
   border: 2px solid var(--line);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-md);
   white-space: nowrap;
 }
 
@@ -113,6 +117,16 @@
   font-size: var(--text-sm);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+/* Checkpoints reached in the dark get a night plate. */
+.sign__plate[data-night='true'] {
+  background: var(--night);
+  color: #ffffff;
+}
+
+.sign__plate[data-night='true']::after {
+  background: var(--night);
 }
 
 .sign__plate[data-level='caution'] {

@@ -36,3 +36,14 @@ export function formatDistanceKm(meters: number): string {
 export function formatTemperature(value: number | null | undefined): string {
   return value == null ? '--' : `${Math.round(value)}°`;
 }
+
+const SHORT_DAY = new Intl.DateTimeFormat('en-GB', { weekday: 'long' });
+
+/** Absolute instant -> "today 07:30", "tomorrow 07:30" or "Monday 07:30" (browser timezone). */
+export function formatDayTime(iso: string, now = new Date()): string {
+  const date = new Date(iso);
+  const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((dayStart(date) - dayStart(now)) / 86_400_000);
+  const day = days === 0 ? 'today' : days === 1 ? 'tomorrow' : SHORT_DAY.format(date);
+  return `${day} ${formatClock(iso)}`;
+}

@@ -15,6 +15,7 @@
 }
 
 .plan {
+  box-shadow: 0 6px 16px -6px rgba(245, 194, 17, 0.7);
   margin-top: 18px;
   height: 52px;
   padding: 0 24px;
