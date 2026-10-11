@@ -93,6 +93,8 @@ function weatherAt(series: QuarterHourWeather | undefined, arrival: Date) {
     windSpeed: value(series?.windSpeed10m),
     windGusts: value(series?.windGusts10m),
     windDirection: value(series?.windDirection10m),
+    dewPoint: value(series?.dewPoint2m),
+    surfaceTemperature: value(series?.surfaceTemperature),
   };
 }
 

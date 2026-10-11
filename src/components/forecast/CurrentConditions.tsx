@@ -11,13 +11,15 @@ const formatVisibility = (metres: number | null) =>
 
 const orDash = (value: number | null, unit: string) => (value == null ? '--' : `${Math.round(value)} ${unit}`);
 
-/** This hour, with the three numbers that matter on the road. */
+/** This hour, with the four numbers that matter on the road. */
 export default function CurrentConditions({ slot }: { slot: HourSlot }) {
   const condition = assessRoad({
     weatherCode: slot.weatherCode,
     temperature: slot.temperature,
     windGusts: slot.windGusts,
     visibility: slot.visibility,
+    dewPoint: slot.dewPoint,
+    surfaceTemperature: slot.surfaceTemperature,
   });
 
   return (
@@ -42,6 +44,12 @@ export default function CurrentConditions({ slot }: { slot: HourSlot }) {
             <Icon name="visibility" size={18} /> Visibility
           </dt>
           <dd>{formatVisibility(slot.visibility)}</dd>
+        </div>
+        <div>
+          <dt>
+            <Icon name="device_thermostat" size={18} /> Road surface
+          </dt>
+          <dd>{formatTemperature(slot.surfaceTemperature)}</dd>
         </div>
         <div>
           <dt>

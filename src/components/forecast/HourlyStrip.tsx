@@ -17,6 +17,8 @@ export default function HourlyStrip({ slots }: { slots: HourSlot[] }) {
             temperature: slot.temperature,
             windGusts: slot.windGusts,
             visibility: slot.visibility,
+            dewPoint: slot.dewPoint,
+            surfaceTemperature: slot.surfaceTemperature,
           });
           return (
             <li key={slot.time} className={styles.hour} data-level={condition.level} title={condition.label}>

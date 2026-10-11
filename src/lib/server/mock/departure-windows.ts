@@ -15,6 +15,8 @@ export function mockDepartureWindows(request: DepartureWindowsRequest): Departur
         temperature: sample.temperature,
         weatherCode: sample.weatherCode,
         isDay: sample.isDay,
+        dewPoint: sample.dewPoint,
+        surfaceTemperature: sample.surfaceTemperature,
       };
     }),
   }));

@@ -23,6 +23,8 @@ const HOURLY_VARS = {
   cloudCover: 'cloud_cover',
   windGusts10m: 'wind_gusts_10m',
   visibility: 'visibility',
+  dewPoint: 'dew_point_2m',
+  surfaceTemperature: 'soil_temperature_0cm',
   isDay: 'is_day',
 } as const satisfies Record<Exclude<keyof HourlyForecast, 'time'>, string>;
 
@@ -109,6 +111,10 @@ export interface QuarterHourWeather {
   windGusts10m: (number | null)[];
   /** degrees the wind blows from */
   windDirection10m: (number | null)[];
+  /** °C */
+  dewPoint2m: (number | null)[];
+  /** °C, `soil_temperature_0cm` (surface temperature proxy) */
+  surfaceTemperature: (number | null)[];
 }
 
 /**
@@ -128,7 +134,7 @@ export async function getQuarterHourWeather(
   url.searchParams.set('longitude', points.map((p) => p.lon.toFixed(4)).join(','));
   url.searchParams.set(
     'minutely_15',
-    'temperature_2m,weather_code,is_day,wind_speed_10m,wind_gusts_10m,wind_direction_10m',
+    'temperature_2m,weather_code,is_day,wind_speed_10m,wind_gusts_10m,wind_direction_10m,dew_point_2m,soil_temperature_0cm',
   );
   url.searchParams.set('timezone', 'GMT');
   url.searchParams.set('start_date', startDate);
@@ -149,6 +155,8 @@ export async function getQuarterHourWeather(
       windSpeed10m: col('wind_speed_10m'),
       windGusts10m: col('wind_gusts_10m'),
       windDirection10m: col('wind_direction_10m'),
+      dewPoint2m: col('dew_point_2m'),
+      surfaceTemperature: col('soil_temperature_0cm'),
     };
   });
 }

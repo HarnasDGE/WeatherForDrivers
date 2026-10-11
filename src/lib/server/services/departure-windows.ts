@@ -35,6 +35,8 @@ export async function getDepartureWindows(request: DepartureWindowsRequest): Pro
         temperature: index === -1 ? null : s.temperature2m[index],
         weatherCode: index === -1 ? null : s.weatherCode[index],
         isDay: isDay == null ? null : isDay === 1,
+        dewPoint: index === -1 ? null : s.dewPoint2m[index],
+        surfaceTemperature: index === -1 ? null : s.surfaceTemperature[index],
       };
     }),
   }));

@@ -54,7 +54,8 @@ Needs `OPENWEATHER_API_KEY`. Replaces legacy `fetchDataForPlace` / `fetchDataFro
   hourly: { time: string[]  /* 120 items, local "YYYY-MM-DDTHH:MM" */,
             temperature2m, precipitationProbability, precipitation, rain, showers,
             snowfall, weatherCode, cloudCover,
-            windGusts10m /* km/h */, visibility /* m */, isDay /* 1|0 */ }, // (number|null)[] aligned with time
+            windGusts10m /* km/h */, visibility /* m */, isDay /* 1|0 */,
+            dewPoint /* °C, dew_point_2m */, surfaceTemperature /* °C, soil_temperature_0cm */ }, // (number|null)[] aligned with time
   daily:  { time: string[]  /* 5 items, "YYYY-MM-DD" */,
             weatherCode, temperatureMax, temperatureMin,
             sunrise, sunset /* local "YYYY-MM-DDTHH:MM" strings */,
@@ -142,7 +143,10 @@ timed from it with no extra TomTom calls. Without it, the server asks TomTom onc
     time: string,                     // ISO UTC arrival, rounded to nearest 15 min
     temperature: number | null,       // °C, 1 decimal (legacy returned the string "12.3°C")
     weatherCode: number | null,       // WMO code
-    isDay: boolean | null
+    isDay: boolean | null,
+    windSpeed, windGusts, windDirection,  // km/h / km/h / degrees, null when unknown
+    dewPoint: number | null,          // °C at 2 m (Open-Meteo dew_point_2m)
+    surfaceTemperature: number | null // °C, road-surface proxy (Open-Meteo soil_temperature_0cm)
   }> }
 ```
 
@@ -174,7 +178,7 @@ Body (`DepartureWindowsRequest`):
 }
 ```
 
-`200 { data: DepartureWindow[] }` – `{ departure, points: Array<{ time, temperature, weatherCode, isDay }> }`,
+`200 { data: DepartureWindow[] }` – `{ departure, points: Array<{ time, temperature, weatherCode, isDay, dewPoint, surfaceTemperature }> }`,
 points index-aligned with `checkpoints`. Driving times are assumed equal for every departure (traffic ignored).
 One Open-Meteo request; no TomTom calls.
 
