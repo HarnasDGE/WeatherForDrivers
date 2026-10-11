@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { Place, RouteData, RouteSummary, RouteType, RouteWeather } from '@/lib/shared/types';
+import type { Place, RouteData, RouteSummary, RouteType, RouteWarning, RouteWeather } from '@/lib/shared/types';
 import { hydrate } from '../hydrate';
 import type { LoadStatus } from './weatherSlice';
 
@@ -33,6 +33,10 @@ export interface RouteState {
   routeStatus: LoadStatus;
   weatherStatus: LoadStatus;
   error: string | null;
+  /** Official IMGW warnings along the main route (stretches refer to its distances). */
+  warnings: RouteWarning[];
+  /** Which main route + weather the warnings belong to (see `warningsKey`), null when none loaded. */
+  warningsFor: string | null;
   favoriteRoutes: FavoriteRoute[];
   /** Places picked or checked recently, most recent first (max MAX_RECENT_PLACES). */
   recentPlaces: Place[];
@@ -63,6 +67,8 @@ const initialState: RouteState = {
   routeStatus: 'idle',
   weatherStatus: 'idle',
   error: null,
+  warnings: [],
+  warningsFor: null,
   favoriteRoutes: [],
   recentPlaces: [],
   focusedCheckpoint: null,
@@ -90,11 +96,15 @@ const routeSlice = createSlice({
       state.error = null;
       state.routeWeather = [];
       state.focusedCheckpoint = null;
+      state.warnings = [];
+      state.warningsFor = null;
     },
     routeLoaded(state, action: PayloadAction<RouteData>) {
       state.routeData = action.payload;
       state.routeWeather = [];
       state.focusedCheckpoint = null;
+      state.warnings = [];
+      state.warningsFor = null;
       state.routeStatus = 'succeeded';
     },
     routeFailed(state, action: PayloadAction<string>) {
@@ -114,6 +124,11 @@ const routeSlice = createSlice({
       state.weatherStatus = 'failed';
       state.error = action.payload;
     },
+    /** Warnings for the main route identified by `key` (results for a replaced route are dropped by the thunk). */
+    routeWarningsLoaded(state, action: PayloadAction<{ key: string; warnings: RouteWarning[] }>) {
+      state.warnings = action.payload.warnings;
+      state.warningsFor = action.payload.key;
+    },
     /** Makes routes[index] the main route (moved to the front); routeWeather is reordered identically. */
     changeMainRoute(state, action: PayloadAction<number>) {
       const index = action.payload;
@@ -121,6 +136,8 @@ const routeSlice = createSlice({
       if (!routes || index <= 0 || index >= routes.length) return;
       routes.unshift(...routes.splice(index, 1));
       state.focusedCheckpoint = null; // the checkpoints belong to another route now
+      state.warnings = [];
+      state.warningsFor = null;
       if (state.routeWeather.length === routes.length) {
         state.routeWeather.unshift(...state.routeWeather.splice(index, 1));
         state.routeWeather.forEach((w, i) => {
@@ -135,6 +152,8 @@ const routeSlice = createSlice({
       state.weatherStatus = 'idle';
       state.error = null;
       state.focusedCheckpoint = null;
+      state.warnings = [];
+      state.warningsFor = null;
     },
     /** Points the map and the timeline at a checkpoint of the main route; null clears the focus. */
     focusCheckpoint(state, action: PayloadAction<{ index: number; source: 'timeline' | 'map' } | null>) {
@@ -192,6 +211,7 @@ const routeSlice = createSlice({
     selectFocusedCheckpoint: (state) => state.focusedCheckpoint,
     selectFocusSeq: (state) => state.focusSeq,
     selectFocusSource: (state) => state.focusSource,
+    selectRouteWarnings: (state) => state.warnings,
     selectFavoriteRoutes: (state) => state.favoriteRoutes,
     selectRecentPlaces: (state) => state.recentPlaces,
     /** Index of the current route in favourites, -1 when not saved (or no route). */
@@ -212,6 +232,7 @@ export const {
   routeWeatherRequested,
   routeWeatherLoaded,
   routeWeatherFailed,
+  routeWarningsLoaded,
   changeMainRoute,
   clearRoute,
   focusCheckpoint,
@@ -235,6 +256,7 @@ export const {
   selectFocusedCheckpoint,
   selectFocusSeq,
   selectFocusSource,
+  selectRouteWarnings,
   selectFavoriteRoutes,
   selectRecentPlaces,
   selectCurrentRouteFavoriteIndex,

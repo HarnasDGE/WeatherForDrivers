@@ -1,11 +1,14 @@
 import * as api from '@/lib/client/api';
 import type { PlaceInput } from '@/lib/client/api';
+import { warningPoints } from '@/lib/shared/route-warnings';
+import type { Route, RouteWeather } from '@/lib/shared/types';
 import { showNotification } from '../slices/notificationsSlice';
 import {
   addRecentPlace,
   routeFailed,
   routeLoaded,
   routeRequested,
+  routeWarningsLoaded,
   routeWeatherFailed,
   routeWeatherLoaded,
   routeWeatherRequested,
@@ -103,3 +106,33 @@ export const loadFavoriteRoute =
     dispatch(setControlPoints(favorite.controlPoints));
     return dispatch(fetchRouteWithWeather(favorite.from, favorite.to));
   };
+
+/** Identifies the main route and its weather check, so warnings are fetched once per checked route. */
+const warningsKey = (route: Route, weather: RouteWeather) => {
+  const middle = route.points[Math.floor(route.points.length / 2)];
+  return [route.summary.lengthInMeters, middle?.lat, middle?.lon, weather.points[0]?.time].join('|');
+};
+
+/**
+ * Official IMGW warnings along the main route (after its weather has loaded). Quiet on failure:
+ * warnings are an extra, the server already answers [] when IMGW is down.
+ */
+export const fetchRouteWarnings = (): AppThunk<boolean> => async (dispatch, getState) => {
+  const { routeData, routeWeather, warningsFor } = getState().route;
+  const route = routeData?.routes[0];
+  const weather = routeWeather[0];
+  if (!route || !weather || weather.points.length === 0) return false;
+  const key = warningsKey(route, weather);
+  if (warningsFor === key) return true;
+  try {
+    const warnings = await api.fetchRouteWarnings({ points: warningPoints(route, weather.points) });
+    const current = getState().route;
+    const [currentRoute, currentWeather] = [current.routeData?.routes[0], current.routeWeather[0]];
+    // The route was replaced meanwhile.
+    if (!currentRoute || !currentWeather || warningsKey(currentRoute, currentWeather) !== key) return false;
+    dispatch(routeWarningsLoaded({ key, warnings }));
+    return true;
+  } catch {
+    return false;
+  }
+};

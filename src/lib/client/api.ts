@@ -8,6 +8,8 @@ import type {
   RadarFrame,
   RouteData,
   RouteType,
+  RouteWarning,
+  RouteWarningsRequest,
   RouteWeather,
   RouteWeatherRequest,
 } from '@/lib/shared/types';
@@ -103,4 +105,13 @@ export function fetchDepartureWindows(body: DepartureWindowsRequest): Promise<De
 
 export function fetchRadar(): Promise<RadarFrame> {
   return request('/api/radar');
+}
+
+/** Official IMGW-PIB warnings along a route (Poland only; [] when none or when IMGW is unavailable). */
+export function fetchRouteWarnings(body: RouteWarningsRequest): Promise<RouteWarning[]> {
+  return request('/api/route-warnings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
 }

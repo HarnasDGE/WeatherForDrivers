@@ -207,6 +207,28 @@
   color: var(--kerb);
 }
 
+/* Official IMGW warning at this checkpoint: a small sign-coloured label under the weather. */
+.officialWarning {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.warningIcon {
+  color: #c98a00;
+}
+
+:global([data-theme='dark']) .warningIcon {
+  color: var(--marking);
+}
+
+.officialWarning:not([data-level='1']) .warningIcon {
+  color: var(--hazard);
+}
+
 .loading {
   display: grid;
   grid-template-columns: 48px var(--band, 30px) 1fr;

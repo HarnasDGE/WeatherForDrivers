@@ -75,6 +75,7 @@ export const API_BASE = {
   unsplash: 'https://api.unsplash.com',
   tomTom: 'https://api.tomtom.com',
   rainViewer: 'https://api.rainviewer.com',
+  imgw: 'https://danepubliczne.imgw.pl',
 } as const;
 
 /** Default timeout for upstream requests, ms. */

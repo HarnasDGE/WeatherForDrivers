@@ -328,6 +328,62 @@ export interface RouteWeather {
 }
 
 /* ------------------------------------------------------------------ */
+/* Official warnings (IMGW-PIB, POST /api/route-warnings)              */
+/* ------------------------------------------------------------------ */
+
+/** A point along the route with the time the driver gets there. */
+export interface RouteWarningsPoint extends LatLon {
+  /** Arrival, ISO 8601. */
+  time: string;
+  /** Driving distance from the route start, metres. */
+  lengthInMeters: number;
+}
+
+export interface RouteWarningsRequest {
+  /** Checkpoints and/or samples along the route, in driving order (1..400). */
+  points: RouteWarningsPoint[];
+}
+
+/** IMGW warning level ("stopień"): 1 yellow, 2 orange, 3 red. */
+export type WarningLevel = 1 | 2 | 3;
+
+/** One continuous run of request points that are inside the warning area while it is valid. */
+export interface WarningStretch {
+  /** Indexes into the request's `points` (inclusive). */
+  fromIndex: number;
+  toIndex: number;
+  fromMeters: number;
+  toMeters: number;
+}
+
+export interface RouteWarning {
+  /** IMGW warning id (unique per response). */
+  id: string;
+  level: WarningLevel;
+  /** Phenomenon as issued, in Polish, e.g. "Silny deszcz z burzami". */
+  event: string;
+  /** Short English label for common phenomena, e.g. "Heavy rain with thunderstorms"; null when unknown. */
+  eventLabel: string | null;
+  /** Probability in %, null when not given. */
+  probability: number | null;
+  /** Validity window, ISO 8601 UTC. */
+  validFrom: string;
+  validTo: string;
+  /** Publication time, ISO 8601 UTC; null when not given. */
+  published: string | null;
+  /** Issuing office, e.g. "Centralne Biuro Prognoz Meteorologicznych w Warszawie". */
+  office: string | null;
+  /** Counties on the route covered by this warning while the driver is there (official names). */
+  areas: string[];
+  /** Affected stretches of the route, in driving order (at least one). */
+  stretches: WarningStretch[];
+  /** Warning text (Polish), plus the forecaster's comment when there is one. */
+  description: string;
+  /** true for the demo warning added in mock mode; never set on real IMGW data. */
+  sample: boolean;
+}
+
+/* ------------------------------------------------------------------ */
 /* Map tiles (OpenWeatherMap layers proxied by /api/tiles/...)         */
 /* ------------------------------------------------------------------ */
 

@@ -1,0 +1,96 @@
+.warnings {
+  margin-top: 14px;
+}
+
+.title {
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.list {
+  margin-top: 6px;
+  list-style: none;
+}
+
+.warning {
+  border-bottom: 1px solid var(--line);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  align-items: center;
+  column-gap: 12px;
+  min-height: 52px;
+  padding: 6px 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Level plate, like a small road sign: 1 caution yellow, 2 hazard outline, 3 solid hazard. */
+.level {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  background: var(--marking);
+  color: var(--on-marking);
+}
+
+.level[data-level='2'] {
+  background: var(--surface);
+  color: var(--hazard);
+  box-shadow: inset 0 0 0 2.5px var(--hazard);
+}
+
+.level[data-level='3'] {
+  background: var(--hazard);
+  color: var(--surface);
+}
+
+.what {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.when,
+.where {
+  font-size: var(--text-xs);
+  color: var(--kerb);
+  font-variant-numeric: tabular-nums;
+}
+
+.where {
+  max-width: 9.5rem;
+  text-align: right;
+  font-weight: 600;
+}
+
+.body {
+  padding: 0 0 12px 38px;
+  font-size: var(--text-sm);
+}
+
+.meta {
+  margin-top: 4px;
+  font-size: var(--text-xs);
+  color: var(--kerb);
+}
+
+.source {
+  margin-top: 6px;
+  font-size: var(--text-xs);
+  color: var(--kerb);
+}
