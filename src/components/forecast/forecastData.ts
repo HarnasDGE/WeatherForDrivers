@@ -15,6 +15,8 @@ export interface HourSlot {
   precipitationProbability: number | null;
   windGusts: number | null;
   visibility: number | null;
+  dewPoint: number | null;
+  surfaceTemperature: number | null;
 }
 
 export function hourSlot(forecast: Forecast, index: number): HourSlot {
@@ -28,6 +30,8 @@ export function hourSlot(forecast: Forecast, index: number): HourSlot {
     precipitationProbability: h.precipitationProbability[index],
     windGusts: h.windGusts10m[index],
     visibility: h.visibility[index],
+    dewPoint: h.dewPoint[index],
+    surfaceTemperature: h.surfaceTemperature[index],
   };
 }
 

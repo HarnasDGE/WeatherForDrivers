@@ -22,6 +22,10 @@ export interface FieldSample {
   windDirection: number;
   /** % */
   humidity: number;
+  /** °C, dew point at 2 m */
+  dewPoint: number;
+  /** °C, road-surface temperature */
+  surfaceTemperature: number;
   isDay: boolean;
 }
 
@@ -40,11 +44,22 @@ function wetness({ lat, lon }: LatLon, hours: number): number {
 const localHour = (date: Date, lon: number) =>
   (((date.getUTCHours() + date.getUTCMinutes() / 60 + lon / 15) % 24) + 24) % 24;
 
+/** 0..1, the winter share of the year (peaks mid-January), so the demo gets frosty nights in the cold season. */
+const winterness = (date: Date) => {
+  const dayOfYear = (date.getTime() - Date.UTC(date.getUTCFullYear(), 0, 1)) / 86_400_000;
+  return 0.5 + 0.5 * Math.cos(((dayOfYear - 15) / 365) * 2 * Math.PI);
+};
+
+/** 0..1, smooth moisture of the near-surface air (independent of the rain band), slowly drifting. */
+const moisture = ({ lat, lon }: LatLon, hours: number) => 0.5 + 0.5 * Math.sin(lat * 3.1 + lon * 2.3 + hours * 0.03);
+
 export function sampleWeather(point: LatLon, at: Date): FieldSample {
   const hour = localHour(at, point.lon);
   const hours = at.getTime() / 3_600_000;
   const daily = 4 * Math.sin(((hour - 9) / 24) * 2 * Math.PI);
-  const temperature = Math.round((13 - (point.lat - 50) * 0.7 + daily + 2 * Math.sin(point.lon * 1.3)) * 10) / 10;
+  const seasonal = -12 * winterness(at) ** 2;
+  const temperature =
+    Math.round((13 - (point.lat - 50) * 0.7 + daily + 2 * Math.sin(point.lon * 1.3) + seasonal) * 10) / 10;
   const wet = wetness(point, hours);
   const cold = temperature <= 1.5;
 
@@ -58,16 +73,29 @@ export function sampleWeather(point: LatLon, at: Date): FieldSample {
   else if (wet < 0.92) weatherCode = cold ? 75 : 65;
   else weatherCode = cold ? 86 : 95;
 
+  const windSpeed = Math.round(8 + wet * 30);
+  const isDay = isDaylight(point, at);
+  // Air-to-dew-point spread: small in rain/fog/snow, in clear air it follows the moisture field (0.3..~5 degrees).
+  const clear = weatherCode <= 2;
+  const spread = clear ? 0.3 + 5 * (1 - moisture(point, hours)) ** 1.5 : Math.max(0.2, (95 - wet * 50 - 45) / 8);
+  // Clear calm nights cool the road below the air; sunny days warm it above; cloud and rain keep it close to the air.
+  const calm = 1 - Math.min(1, windSpeed / 30);
+  const surfaceOffset = isDay
+    ? (weatherCode === 0 ? 3 : weatherCode === 2 ? 1.5 : 0) * Math.max(0, Math.sin(((hour - 6) / 12) * Math.PI))
+    : -(weatherCode === 0 ? 4 : weatherCode === 2 ? 2.5 : 0.3) * (0.4 + 0.6 * calm);
+
   return {
     weatherCode,
     temperature,
-    windSpeed: Math.round(8 + wet * 30),
+    windSpeed,
     windGusts: Math.round((8 + wet * 30) * 1.6),
     // Mostly westerly, veering slowly across the map.
     windDirection: Math.round(
       (((250 + 70 * Math.sin(point.lat * 0.9 - point.lon * 0.4 + hours * 0.02)) % 360) + 360) % 360,
     ),
     humidity: Math.round(45 + wet * 50),
-    isDay: isDaylight(point, at),
+    isDay,
+    dewPoint: Math.round((temperature - spread) * 10) / 10,
+    surfaceTemperature: Math.round((temperature + surfaceOffset) * 10) / 10,
   };
 }

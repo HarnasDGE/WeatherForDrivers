@@ -30,6 +30,8 @@ Open-Meteo nie wymaga klucza. Wyszukiwanie miejsc i „Use my location” korzys
 
 Ochrona limitów: odpowiedzi zewnętrznych API są cache'owane w pamięci (prognoza 10 min, geokodowanie 24 h, trasy 2 min), endpointy GET mają `Cache-Control` z `s-maxage` (CDN Vercel), a middleware (`src/middleware.ts`) ogranicza ruch na IP (np. `/api/route`: 15/min i 150/dzień; HTTP 429 `RATE_LIMITED` z `Retry-After`). Uwaga: stan jest w pamięci procesu, więc na Vercel (wiele instancji, restarty) to ochrona „best effort"; docelowo można przenieść liczniki i cache do Upstash Redis / Vercel KV. Szczegóły: `docs/API.md`.
 
+Wykrywanie gołoledzi i szronu opiera się na temperaturze nawierzchni (`soil_temperature_0cm`) i punkcie rosy (`dew_point_2m`) z Open-Meteo, a nie tylko na temperaturze powietrza (`src/lib/shared/road-conditions.ts`).
+
 Tryb demo: bez `TOMTOM_API_KEY` / `OPENWEATHER_API_KEY` (albo z `MOCK_API=true`) trasy i pogoda na trasie to dane przykładowe z `src/lib/server/mock/`. W UI widać wtedy znacznik „Demo data”. Wyszukiwarka miejsc i prognoza (Open-Meteo) zawsze działają na żywo. Szczegóły: `docs/API.md`.
 
 ## Struktura

@@ -138,6 +138,10 @@ export interface HourlyForecast {
   windGusts10m: (number | null)[];
   /** metres */
   visibility: (number | null)[];
+  /** °C, dew point at 2 m */
+  dewPoint: (number | null)[];
+  /** °C, surface temperature (Open-Meteo `soil_temperature_0cm`, the best road-surface proxy) */
+  surfaceTemperature: (number | null)[];
   /** 1 = daylight, 0 = night */
   isDay: (number | null)[];
 }
@@ -264,6 +268,10 @@ export interface RouteWeatherPoint extends LatLon {
   windGusts: number | null;
   /** Direction the wind blows FROM, compass degrees; null when unknown. */
   windDirection: number | null;
+  /** °C dew point at 2 m; null when unknown. */
+  dewPoint: number | null;
+  /** °C surface temperature (road-surface proxy); null when unknown. */
+  surfaceTemperature: number | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -288,6 +296,10 @@ export interface WindowPoint {
   temperature: number | null;
   weatherCode: number | null;
   isDay: boolean | null;
+  /** °C dew point at 2 m; null when unknown. */
+  dewPoint: number | null;
+  /** °C surface temperature (road-surface proxy); null when unknown. */
+  surfaceTemperature: number | null;
 }
 
 export interface DepartureWindow {

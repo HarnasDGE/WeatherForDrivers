@@ -45,6 +45,8 @@ export function mockWeatherAlongRoutes(
           windSpeed: sample.windSpeed,
           windGusts: sample.windGusts,
           windDirection: sample.windDirection,
+          dewPoint: sample.dewPoint,
+          surfaceTemperature: sample.surfaceTemperature,
         };
       }),
     };
