@@ -76,7 +76,13 @@ function photonUrl(path: string): URL {
 }
 
 const request = (url: URL) =>
-  fetchJson<PhotonResponse>(url, { service: SERVICE, retries: 1, init: { headers: { 'User-Agent': USER_AGENT } } });
+  fetchJson<PhotonResponse>(url, {
+    service: SERVICE,
+    retries: 1,
+    init: { headers: { 'User-Agent': USER_AGENT } },
+    // Place names do not change: a day of caching also keeps us within Photon's fair use.
+    cacheTtlMs: 24 * 3600_000,
+  });
 
 export async function searchPlaces(query: string, limit: number): Promise<Place[]> {
   const url = photonUrl('/api/');
